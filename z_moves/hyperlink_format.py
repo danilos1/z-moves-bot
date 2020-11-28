@@ -1,0 +1,1 @@
+HL = '<a href="{link}">{text}</a>'
