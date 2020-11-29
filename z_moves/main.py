@@ -1,16 +1,14 @@
-# This is a sample Python script.
+from bs4 import BeautifulSoup
+import urllib.request
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Url for each group
+groupUrl = 'http://rozklad.kpi.ua/Schedules/ViewSchedule.aspx?g='
 
+source = urllib.request.urlopen(groupUrl).read()
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Entire schedule page object for some group
+soup = BeautifulSoup(source, 'lxml')
 
+print(soup.prettify())
+# TODO Page parsing
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
