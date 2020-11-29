@@ -5,7 +5,7 @@ from z_moves.zm_week import zm_1_2tuesday, zm_1_5friday, zm_2_1monday, zm_2_5fri
 
 bot = telebot.TeleBot('1469473212:AAGdm_vV4vuwfD0qXfwAq-4If7eI4sjWQFA')
 
-print("bot")
+print("bot-hot")
 
 '''
 ########################################################################################################################
