@@ -190,7 +190,7 @@ def settings(message):
         bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
     elif message.text.lower() == '👺 хотлайны':
-        bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
+        bot.send_message(message.chat.id, '⛔️ В разработке/ WAIT NAHOOI', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
     elif message.text.lower() == '📢 уведомления':
         bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
