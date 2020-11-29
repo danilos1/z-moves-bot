@@ -1,17 +1,17 @@
 import telebot
+from z_moves.scripts.schedult_parser import *
 from z_moves.zm_week import zm_1_3wednesday
 from z_moves.zm_week import zm_1_2tuesday, zm_1_5friday, zm_2_1monday, zm_2_5friday, zm_2_2tuesday, zm_2_4thursday, \
     zm_1_1monday, zm_2_3wednesday, zm_1_4thursday
 
 bot = telebot.TeleBot('1469473212:AAGdm_vV4vuwfD0qXfwAq-4If7eI4sjWQFA')
-
+schedule = Schedule()
 
 '''
 ########################################################################################################################
                                               REPLY_MARKUP= SECTION
 ########################################################################################################################                               
 '''
-
 
 BackButtonKeyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 BackButtonKeyboard.add('⬅️Назад')
@@ -32,13 +32,11 @@ keyboard1.add('⬅ Назад')
 keyboard2 = telebot.types.ReplyKeyboardMarkup(True, True)
 keyboard2.add('🤯 Пн', '😫 Вт', '😞 Ср', '😏 Чт', '🤤 Пт', '⬅ Назад')
 
-
 '''
 ########################################################################################################################
                                      REPLY_MARKUP= SECTION HAVE ENDED
 ########################################################################################################################
 '''
-
 
 '''
 ########################################################################################################################
@@ -60,9 +58,9 @@ Z-Moves на связи 😎
 
 @bot.message_handler(content_types=['text'])
 def registration(message):
-    if message.text.lower() == 'io83' or message.text.lower() == 'io-83' or message.text.lower() == 'іо83' or \
-       message.text.lower() == 'іо-83' or message.text.lower() == 'ио83' or message.text.lower() == 'ио-83':
-
+    text = message.text.lower()
+    if schedule.is_group_exist(text):
+        schedule.url = schedule.url.format(text)
         bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=StartKeyboard)
         bot.register_next_step_handler(message, callback=main_menu)
     else:
@@ -74,7 +72,6 @@ def registration(message):
                                       BOT START PROCEDURE HAVE ENDED
 ########################################################################################################################
 '''
-
 
 '''                        
 ########################################################################################################################                    
@@ -105,7 +102,6 @@ def main_menu(message):
 ########################################################################################################################
 '''
 
-
 '''
 ########################################################################################################################                                            
                                                   SCHEDULE BRANCH                   
@@ -129,19 +125,24 @@ def week_choose(message):
 @bot.message_handler(content_types=['text'])
 def week_1(message):
     if message.text.lower() == '🤯 пн':
-        bot.send_message(message.chat.id, zm_1_1monday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 1), '', '', ''), parse_mode="HTML",
+                         reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😫 вт':
-        bot.send_message(message.chat.id, zm_1_2tuesday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 2), '', '', ''), parse_mode="HTML",
+                         reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😞 ср':
-        bot.send_message(message.chat.id, zm_1_3wednesday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 3), '', '', ''), parse_mode="HTML",
+                         reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😏 чт':
-        bot.send_message(message.chat.id, zm_1_4thursday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 4), '', '', ''), parse_mode="HTML",
+                         reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '🤤 пт':
-        bot.send_message(message.chat.id, zm_1_5friday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 5), '', '', ''), parse_mode="HTML",
+                         reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '⬅ назад':
         bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=keyboard1)
@@ -175,7 +176,6 @@ def week_2(message):
                                              SCHEDULE BRANCH HAVE ENDED                
 ########################################################################################################################
 '''
-
 
 '''                                            
 ########################################################################################################################
