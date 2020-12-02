@@ -1,9 +1,10 @@
 import telebot
+import os
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 
 
-bot = telebot.TeleBot('1469473212:AAGdm_vV4vuwfD0qXfwAq-4If7eI4sjWQFA')
+bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 schedule = Schedule()
 
 '''
