@@ -1,4 +1,5 @@
 import requests
+from datetime import date
 
 free = '''
 ░░▄█████████████████▄
@@ -18,15 +19,17 @@ free = '''
 ░░░░░▌▒▒▒▒▀▀▀▒▒▒▒▒▒▒▐
 '''
 
+week_days = ('понедельник', 'вторник', 'среду', 'четверг', 'пятницу')
+
+
 def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
     week = requests.get(weekUrl).json()['data']
     return week
 
 
-def show_schedule(sch: str, hl: str, gl: str, aw: str):
-    return '''
-Запланированные мувы на понедельник:
+def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
+    return 'Запланированные мувы на ' + day + ':\n' + '''
 ———————————————
 {schedule}
 ———————————————
@@ -57,5 +60,3 @@ class Schedule:
                             lesson["teacher_name"]
 
         return free if (schedule == '') else schedule
-
-

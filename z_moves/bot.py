@@ -125,24 +125,27 @@ def week_choose(message):
 @bot.message_handler(content_types=['text'])
 def week_1(message):
     if message.text.lower() == '🤯 пн':
-        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 1), '', '', ''), parse_mode="HTML",
+        bot.send_message(message.chat.id, show_schedule(week_days[0], schedule.getDay(1, 1), '', '', ''), parse_mode="HTML",
                          reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😫 вт':
-        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 2), '', '', ''), parse_mode="HTML",
+        bot.send_message(message.chat.id, show_schedule(week_days[1], schedule.getDay(1, 2), '', '', ''), parse_mode="HTML",
                          reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😞 ср':
-        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 3), '', '', ''), parse_mode="HTML",
+        bot.send_message(message.chat.id, show_schedule(week_days[2], schedule.getDay(1, 3), '', '', ''), parse_mode="HTML",
                          reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '😏 чт':
-        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 4), '', '', ''), parse_mode="HTML",
+        bot.send_message(message.chat.id, show_schedule(week_days[3], schedule.getDay(1, 4), '', '', ''), parse_mode="HTML",
                          reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '🤤 пт':
-        bot.send_message(message.chat.id, show_schedule(schedule.getDay(1, 5), '', '', ''), parse_mode="HTML",
-                         reply_markup=keyboard2)
+        bot.send_message(
+            message.chat.id, show_schedule(week_days[4], schedule.getDay(1, 5), '', '', ''),
+            parse_mode="HTML",
+            reply_markup=keyboard2
+        )
         bot.register_next_step_handler(message, callback=week_1)
     if message.text.lower() == '⬅ назад':
         bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=keyboard1)
@@ -152,19 +155,19 @@ def week_1(message):
 @bot.message_handler(content_types=['text'])
 def week_2(message):
     if message.text.lower() == '🤯 пн':
-        bot.send_message(message.chat.id, zm_2_1monday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(week_days[0], schedule.getDay(2, 1), '', '', ''), parse_mode="HTML", reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     if message.text.lower() == '😫 вт':
-        bot.send_message(message.chat.id, zm_2_2tuesday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(week_days[1], schedule.getDay(2, 2), '', '', ''), parse_mode="HTML", reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     if message.text.lower() == '😞 ср':
-        bot.send_message(message.chat.id, zm_2_3wednesday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(week_days[2], schedule.getDay(2, 3), '', '', ''), parse_mode="HTML", reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     if message.text.lower() == '😏 чт':
-        bot.send_message(message.chat.id, zm_2_4thursday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(week_days[3], schedule.getDay(2, 4), '', '', ''), parse_mode="HTML", reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     if message.text.lower() == '🤤 пт':
-        bot.send_message(message.chat.id, zm_2_5friday.ZM_skeleton, parse_mode="HTML", reply_markup=keyboard2)
+        bot.send_message(message.chat.id, show_schedule(week_days[4], schedule.getDay(2, 5), '', '', ''), parse_mode="HTML", reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     if message.text.lower() == '⬅ назад':
         bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=keyboard1)
