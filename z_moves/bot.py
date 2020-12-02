@@ -1,8 +1,8 @@
 import telebot
-from z_moves.scripts.schedult_parser import *
-from z_moves.zm_week import zm_1_3wednesday
+from z_moves.scripts.schedule_parser import *
 from z_moves.zm_week import zm_1_2tuesday, zm_1_5friday, zm_2_1monday, zm_2_5friday, zm_2_2tuesday, zm_2_4thursday, \
     zm_1_1monday, zm_2_3wednesday, zm_1_4thursday
+from z_moves.buttons import *
 
 bot = telebot.TeleBot('1469473212:AAGdm_vV4vuwfD0qXfwAq-4If7eI4sjWQFA')
 schedule = Schedule()
@@ -26,7 +26,7 @@ StartKeyboard.add('📆 Расписание', '⚙ Настройки')
 StartKeyboard.add('ℹ Инфо', '❓ Помощь')
 
 keyboard1 = telebot.types.ReplyKeyboardMarkup(True, True)
-keyboard1.add('1️⃣ Неделя', '2️⃣ Неделя')
+keyboard1.add(week1_button, week2_button)
 keyboard1.add('⬅ Назад')
 
 keyboard2 = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -111,10 +111,10 @@ def main_menu(message):
 
 @bot.message_handler(content_types=['text'])
 def week_choose(message):
-    if message.text.lower() == '1️⃣ неделя':
+    if message.text.lower() == week1_button.lower():
         bot.send_message(message.chat.id, 'А теперь день', reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_1)
-    elif message.text.lower() == '2️⃣ неделя':
+    elif message.text.lower() == week2_button.lower():
         bot.send_message(message.chat.id, 'А теперь день', reply_markup=keyboard2)
         bot.register_next_step_handler(message, callback=week_2)
     elif message.text.lower() == '⬅ назад':

@@ -1,3 +1,3 @@
-from z_moves.scripts.schedult_parser import *
+from z_moves.scripts.schedule_parser import *
 
-is_group_exist("іо-89")
+print(get_current_week())
