@@ -186,19 +186,20 @@ def week_2(message):
 
 @bot.message_handler(content_types=['text'])
 def settings(message):
-    if message.text.lower() == '🔗 ссылки':
+    msg = message.text.lower()
+    if msg == '🔗 ссылки':
         bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
-    elif message.text.lower() == '👺 хотлайны':
+    elif msg == '👺 хотлайны':
         bot.send_message(message.chat.id, '⛔️ В разработке/ WAIT NAHOOI', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
-    elif message.text.lower() == '📢 уведомления':
+    elif msg == '📢 уведомления':
         bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
-    elif message.text.lower() == '‍🎓 группа':
+    elif msg == '‍🎓 группа':
         bot.send_message(message.chat.id, '⛔️ В разработке', reply_markup=SettingsKeyboard)
         bot.register_next_step_handler(message, settings)
-    elif message.text.lower() == '⬅ назад':
+    elif msg == '⬅ назад':
         bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=StartKeyboard)
         bot.register_next_step_handler(message, callback=main_menu)
 
