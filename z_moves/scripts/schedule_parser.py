@@ -21,7 +21,6 @@ free = '''
 
 week_days = ('понедельник', 'вторник', 'среду', 'четверг', 'пятницу')
 
-
 def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
     week = requests.get(weekUrl).json()['data']
@@ -55,8 +54,8 @@ class Schedule:
         for lesson in data:
             if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
                 schedule += '\n' + lesson["time_start"][:5] + ' — <i>' + \
-                            lesson["lesson_name"] + '</i> <b>' + \
+                            lesson["lesson_name"] + '</i> <b>\n' + \
                             lesson["lesson_type"] + "</b> — " + \
-                            lesson["teacher_name"]
+                            lesson["teacher_name"] + '\n'
 
         return free if (schedule == '') else schedule

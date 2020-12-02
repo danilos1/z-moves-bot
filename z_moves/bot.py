@@ -1,7 +1,5 @@
 import telebot
 from z_moves.scripts.schedule_parser import *
-from z_moves.zm_week import zm_1_2tuesday, zm_1_5friday, zm_2_1monday, zm_2_5friday, zm_2_2tuesday, zm_2_4thursday, \
-    zm_1_1monday, zm_2_3wednesday, zm_1_4thursday
 from z_moves.buttons import *
 
 bot = telebot.TeleBot('1469473212:AAGdm_vV4vuwfD0qXfwAq-4If7eI4sjWQFA')
