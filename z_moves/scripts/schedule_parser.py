@@ -19,15 +19,17 @@ free = '''
 ░░░░░▌▒▒▒▒▀▀▀▒▒▒▒▒▒▒▐
 '''
 
+url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
+url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
+
 week_days = ('понедельник', 'вторник', 'среду', 'четверг', 'пятницу')
 lesson_numbers = {
-    '08:30':  '1️⃣',
-    '10:25':  '2️⃣',
-    '12:20':  '3️⃣',
-    '14:15':  '4️⃣',
-    '16:10':  '5️⃣'
+    '08:30': '1️⃣',
+    '10:25': '2️⃣',
+    '12:20': '3️⃣',
+    '14:15': '4️⃣',
+    '16:10': '5️⃣'
 }
-
 
 
 def get_current_week():
@@ -55,14 +57,14 @@ def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
 
 
 class Schedule:
-    url = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
-    url_for_teachers = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
+    url: str
 
-    def is_group_exist(self, group: str):
-        return requests.get(self.url.format(group)).ok
+    @staticmethod
+    def is_group_exist(group: str):
+        url = url_for_students_pattern
+        return requests.get(url.format(group)).ok
 
     def get_day(self, week, day):
-        print('ga')
         schedule = ''
         r = requests.get(self.url)
         data = r.json()['data']
@@ -78,7 +80,7 @@ class Schedule:
 
     def get_day_for_teacher(self, week, day):
         schedule = ''
-        r = requests.get(self.url_for_teachers)
+        r = requests.get(self.url)
         data = r.json()['data']
         for lesson in data:
             if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
@@ -92,6 +94,10 @@ class Schedule:
                 for group in lesson['groups']:
                     group_list.append(group['group_full_name'])
 
-                schedule += 'Груп'+('а: ' if len(group_list) == 1 else 'и: ') + ', '.join(group_list)
+                schedule += 'Груп' + ('а: ' if len(group_list) == 1 else 'и: ') + ', '.join(group_list)
 
         return free if (schedule == '') else schedule
+
+    def set_group(self, group):
+        self.url = url_for_students_pattern
+        self.url = self.url.format(group)

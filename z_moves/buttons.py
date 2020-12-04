@@ -10,9 +10,11 @@ back_button = '⬅️Назад'
 
 links_button = '🔗 Ссылки'
 hotlines_button = '👺 Хотлайны'
-notifications_button = '📢 Уведомления'
-change_group_button = '‍🎓 Группа'
+notifications_button = '🔕 Уведомления'
+change_group_button = '‍🎓 Сменить группу'
 
+current_day_button = "📝 Текущее расписание"
+tomorrow_day_button = "📝 Расписание на завтра"
 schedule_button = '📆 Расписание'
 settings_button = '⚙ Настройки'
 info_button = 'ℹ Инфо'
