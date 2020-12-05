@@ -7,7 +7,7 @@ from threading import Thread
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 
-bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
+bot = telebgot.TeleBot(os.environ['BOT_TOKEN'])
 sch = Schedule()
 is_notification_on = False
 
