@@ -9,7 +9,7 @@ from z_moves.scripts.schedule_parser import *
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 sch = Schedule()
-is_notification_on = False
+
 
 '''
 ########################################################################################################################
@@ -262,6 +262,7 @@ def week_2(message):
 
 @bot.message_handler(content_types=['text'])
 def settings(message):
+
     try:
         mtl = message.text.lower()
 
@@ -290,16 +291,22 @@ def settings(message):
         bot.register_next_step_handler(message, callback=settings)
 
 
+is_notification_on = False
+
 @bot.message_handler(content_types=['text'])
 def set_notification(message):
+    global is_notification_on
     try:
         mtl = message.text.lower()
-
         if re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", mtl):
-            schedule.every().day.at(message.text).do(lambda: send_notification(message))
-
-            bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_keyboard)
-            bot.register_next_step_handler(message, callback=settings)
+            if not is_notification_on:
+                is_notification_on = True
+                schedule.every().day.at(message.text).do(lambda: send_notification(message))
+                bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+            else:
+                bot.send_message(message.chat.id, 'Время уже установлено', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
 
         elif mtl == back_button.lower():
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=settings_keyboard)
