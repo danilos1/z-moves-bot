@@ -1,9 +1,6 @@
 # Default ignored files
 syntax: glob
 
-<<<<<<< HEAD
-=======
 __pycache__
->>>>>>> 28e45925ee29fa418ba49d14763db74e12797eb8
 *.iml
 .idea
