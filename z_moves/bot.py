@@ -368,6 +368,8 @@ def schedule_checker():
 
 def send_notification(message):
     bot.send_message(message.chat.id, show_day("Завтра", get_current_day() + 1))
+    global is_notification_on
+    is_notification_on = False
 
 
 notification_thread = Thread(target=schedule_checker)
