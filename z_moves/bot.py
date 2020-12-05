@@ -11,7 +11,6 @@ bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 sch = Schedule()
 is_notification_on = False
 
-
 '''
 ########################################################################################################################
                                               REPLY_MARKUP= SECTION
@@ -83,6 +82,7 @@ def registration(message):
     else:
         bot.send_message(message.chat.id, '''Ой, что-то я о такой не слышал 🤥\nПоробуй ещё''')
 
+
 '''
 ########################################################################################################################
                                       BOT START PROCEDURE HAVE ENDED
@@ -111,6 +111,14 @@ def main_menu(message):
     elif mtl == help_button.lower():
         bot.send_message(message.chat.id, develop_button, reply_markup=main_menu_keyboard)
         bot.register_next_step_handler(message, callback=main_menu)
+    elif mtl == current_day_button.lower():
+        s = show_day("Сегодня", get_current_day())
+        bot.send_message(message.chat.id, s, reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(message, callback=main_menu)
+    elif mtl == tomorrow_day_button.lower():
+        s = show_day("Завтра", get_current_day() + 1)
+        bot.send_message(message.chat.id, s, reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(message, callback=main_menu)
 
 
 '''                        
@@ -124,6 +132,16 @@ def main_menu(message):
                                                   SCHEDULE BRANCH                   
 ########################################################################################################################                                                  
 '''
+
+
+def show_day(wd: str, day: int):
+    if day > 4:
+        s = wd + ' пар нету. Отдыхаем'
+    else:
+        weekday = week_days[day]
+        cur_week = get_current_week()
+        s = show_schedule(weekday, sch.get_day(cur_week, day), '', '', '')
+    return s
 
 
 @bot.message_handler(content_types=['text'])
@@ -234,11 +252,13 @@ def settings(message):
         bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
         bot.register_next_step_handler(message, callback=main_menu)
 
+
 @bot.message_handler(content_types=['text'])
 def set_notification(message):
-    schedule.every().second.do(lambda: send_notification(message))
-    Thread(target=schedule_checker).start()
-
+    schedule.every().day.at(message.text).do(lambda: send_notification(message))
+    global notification_thread
+    notification_thread = Thread(target=schedule_checker)
+    notification_thread.start()
 
 @bot.message_handler(content_types=['text'])
 def change_group(message):
@@ -255,8 +275,9 @@ def schedule_checker():
     while True:
         schedule.run_pending()
 
+
 def send_notification(message):
-    bot.send_message(message.chat.id, "Hello")
+    bot.send_message(message.chat.id, show_day("Завтра", get_current_day()+1))
 
 
 if __name__ == '__main__':
