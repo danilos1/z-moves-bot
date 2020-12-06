@@ -22,7 +22,13 @@ free = '''
 url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
 url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
 
-week_days = ('понедельник', 'вторник', 'среду', 'четверг', 'пятницу')
+week_days = {
+    1: 'понедельник',
+    2: 'вторник',
+    3: 'среду',
+    4: 'четверг',
+    5: 'пятницу'
+}
 lesson_numbers = {
     '08:30': '1️⃣',
     '10:25': '2️⃣',
@@ -36,10 +42,6 @@ def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
     week = requests.get(weekUrl).json()['data']
     return week
-
-
-def get_current_day():
-    return date.today().weekday()
 
 
 def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
@@ -72,7 +74,6 @@ class Schedule:
 
     def get_schedule(self, week, day):
         schedule = ''
-
         if self.role == 'студент':
             r = requests.get(self.url)
             data = r.json()['data']
