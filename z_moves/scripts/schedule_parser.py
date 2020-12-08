@@ -1,5 +1,6 @@
 import requests
-from datetime import date
+from bs4 import BeautifulSoup
+import z_moves.dao.session_db as sdb
 
 free = '''
 ░░▄█████████████████▄
@@ -19,6 +20,7 @@ free = '''
 ░░░░░▌▒▒▒▒▀▀▀▒▒▒▒▒▒▒▐
 '''
 
+session_url = 'http://rozklad.kpi.ua/Schedules/ViewSessionSchedule.aspx?g='
 url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
 url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
 
@@ -29,6 +31,7 @@ week_days = {
     4: 'четверг',
     5: 'пятницу'
 }
+
 lesson_numbers = {
     '08:30': '1️⃣',
     '10:25': '2️⃣',
@@ -37,6 +40,7 @@ lesson_numbers = {
     '16:10': '5️⃣'
 }
 
+subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
 def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
@@ -58,9 +62,18 @@ def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
 '''.format(schedule=sch, hotlines=hl, global_links=gl, afterword=aw)
 
 
+def show_exams(sch: str):
+    return '''Запланированные мувы на экзамены: 
+———————————————
+{schedule}
+———————————————
+'''.format(schedule=sch)
+
+
 class Schedule:
     role: str
     url: str
+    id: str
 
     @staticmethod
     def is_teacher_exist(name: str):
@@ -118,5 +131,29 @@ class Schedule:
         else:
             raise AttributeError('Cannot identify your role')
 
+        self.id = id
         self.url = self.url.format(id)
         self.role = role
+
+    def get_session_for_schedule(self):
+        print(self.id)
+        full_url = session_url + sdb.session_tokens[self.id]
+        req = requests.get(full_url)
+        soup = BeautifulSoup(req.content, 'html.parser')
+
+        trS = []
+        rows = soup.find_all('tr')
+        schedule = ''
+        for row in rows:
+            trS.append(row.find_all('td'))
+
+        i = 0
+        for td in trS:
+            if td[1].getText():
+                schedule += '\n⚠️<b>' + td[0].getText() + '</b>\n' + subject_enumeration[i] + ' '
+                for link in td[1].find_all('a', href=True):
+                    schedule += '\n' + link.getText()
+                schedule += ' : ' + td[1].getText()[-5:] + '\n'
+                i += 1
+
+        return show_exams(schedule)

@@ -1,4 +1,5 @@
 from z_moves.scripts.schedule_parser import *
+from datetime import date
 
 current_week = get_current_week()
 current_day = date.today().weekday()

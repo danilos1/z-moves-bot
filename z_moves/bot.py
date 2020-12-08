@@ -1,4 +1,5 @@
 import datetime
+from datetime import date
 
 import telebot
 import os
@@ -34,8 +35,8 @@ settings_keyboard.add(notifications_button, change_group_button)
 settings_keyboard.add(back_button)
 
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-main_menu_keyboard.add(current_day_button, tomorrow_day_button)
 main_menu_keyboard.add(session_button)
+main_menu_keyboard.add(current_day_button, tomorrow_day_button)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(info_button, help_button)
 
@@ -58,8 +59,6 @@ day_choose_keyboard.add(
                                                 BOT START
 ########################################################################################################################
 '''
-
-
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
@@ -84,20 +83,19 @@ def identification(message):
 @bot.message_handler(content_types=['text'])
 def registration(message):
     try:
-        message_text = message.text
-        if message_text == student_button:
+        if message.text == student_button:
             bot.send_message(message.chat.id,
                              'Привет, трудяга! Чтобы показать расписание, мне нужно узнать твою группу 🙂',
                              reply_markup=re_register_keyboard)
             bot.register_next_step_handler(message, callback=student_registration)
 
-        elif message_text == teacher_button:
+        elif message.text == teacher_button:
             bot.send_message(message.chat.id,
                     'Добрый день! Чтобы показать Ваше расписание, мне нужно узнать Ваше полное имя, фамилию и отчество украинском 🙂',
                     reply_markup=re_register_keyboard
             )
             bot.register_next_step_handler(message, callback=teacher_registration)
-        elif message_text == back_button:
+        elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=re_registration)
         else:
@@ -107,20 +105,20 @@ def registration(message):
         bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
         bot.register_next_step_handler(message, callback=settings)
 
+
 @bot.message_handler(content_types=['text'])
 def re_registration(message):
     try:
-        message_text = message.text
-        if message_text == student_button:
+        if message.text == student_button:
             bot.send_message(message.chat.id, 'Введи новую группу 🙂')
             bot.register_next_step_handler(message, callback=student_registration)
 
-        elif message_text == teacher_button:
+        elif message.text == teacher_button:
             bot.send_message(message.chat.id,
                     'Введите Ваше полное имя, фамилию и отчество на украинском 🙂'
             )
             bot.register_next_step_handler(message, callback=teacher_registration)
-        elif message_text == back_button:
+        elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
         else:
@@ -139,15 +137,14 @@ def re_registration(message):
 @bot.message_handler(content_types=['text'])
 def teacher_registration(message):
     try:
-        message_text = message.text
-        if message_text == back_button:
+        if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=registration)
         else:
             if sch.is_teacher_exist(message.text):
-                sch.identify_as('преподаватель', message_text)
+                sch.identify_as('преподаватель', message.text)
                 bot.send_message(message.chat.id,
-                                 'Добрый день, {0}!'.format(sch.get_teacher_name(message_text)),
+                                 'Добрый день, {0}!'.format(sch.get_teacher_name(message.text)),
                                  reply_markup=main_menu_keyboard)
                 bot.register_next_step_handler(message, callback=main_menu)
             else:
@@ -161,13 +158,12 @@ def teacher_registration(message):
 @bot.message_handler(content_types=['text'])
 def student_registration(message):
     try:
-        message_text = message.text
-        if message_text == back_button:
+        if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=registration)
         else:
             if sch.is_group_exist(message.text):
-                sch.identify_as('студент', message_text)
+                sch.identify_as('студент', message.text)
                 bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
                 bot.register_next_step_handler(message, callback=main_menu)
             else:
@@ -182,30 +178,32 @@ def student_registration(message):
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
     try:
-        mtl = message.text.lower()
+        if message.text == session_button:
+            bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML', reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, callback=main_menu)
 
-        if mtl == schedule_button.lower():
+        elif message.text == schedule_button:
             bot.send_message(message.chat.id, 'Выбери неделю', reply_markup=week_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_choose)
 
-        elif mtl == settings_button.lower():
+        elif message.text == settings_button:
             bot.send_message(message.chat.id, 'Что ты желаешь настроить?', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
 
-        elif mtl == info_button.lower():
+        elif message.text == info_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
-        elif mtl == help_button.lower():
+        elif message.text == help_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
-        elif mtl == current_day_button.lower():
+        elif message.text == current_day_button:
             s = show_day("Сегодня", date.today().weekday() + 1)
             bot.send_message(message.chat.id, s, parse_mode="HTML", reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
-        elif mtl == tomorrow_day_button.lower():
+        elif message.text == tomorrow_day_button:
             tomorrow = (date.today() + datetime.timedelta(days=1)).weekday() + 1
             s = show_day("Завтра", tomorrow)
             bot.send_message(message.chat.id, s, parse_mode="HTML", reply_markup=main_menu_keyboard)
@@ -238,14 +236,13 @@ def show_day(wd: str, day: int):
 @bot.message_handler(content_types=['text'])
 def week_choose(message):
     try:
-        mtl = message.text.lower()
-        if mtl == week1_button.lower():
+        if message.text == week1_button:
             bot.send_message(message.chat.id, 'А теперь день', reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == week2_button.lower():
+        elif message.text == week2_button:
             bot.send_message(message.chat.id, 'А теперь день', reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == back_button.lower():
+        elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
         else:
@@ -260,33 +257,32 @@ def week_choose(message):
 @bot.message_handler(content_types=['text'])
 def week_1(message):
     try:
-        mtl = message.text.lower()
-        if mtl == day_button[0].lower():
+        if message.text == day_button[0]:
             bot.send_message(message.chat.id, show_schedule("понедельник", sch.get_schedule(1, 1), '', '', ''),
                              parse_mode="HTML",
                              reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == day_button[1].lower():
+        elif message.text == day_button[1]:
             bot.send_message(message.chat.id, show_schedule("вторник", sch.get_schedule(1, 2), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == day_button[2].lower():
+        elif message.text == day_button[2]:
             bot.send_message(message.chat.id, show_schedule("среду", sch.get_schedule(1, 3), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == day_button[3].lower():
+        elif message.text == day_button[3]:
             bot.send_message(message.chat.id, show_schedule("четверг", sch.get_schedule(1, 4), '', '', ''),
                              parse_mode="HTML",
                              reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == day_button[4].lower():
+        elif message.text == day_button[4]:
             bot.send_message(
                 message.chat.id, show_schedule("пятницу", sch.get_schedule(1, 5), '', '', ''),
                 parse_mode="HTML",
                 reply_markup=day_choose_keyboard
             )
             bot.register_next_step_handler(message, callback=week_1)
-        elif mtl == back_button.lower():
+        elif message.text == back_button:
             bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=week_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_choose)
         else:
@@ -301,29 +297,27 @@ def week_1(message):
 @bot.message_handler(content_types=['text'])
 def week_2(message):
     try:
-        mtl = message.text.lower()
-
-        if mtl == day_button[0].lower():
+        if message.text == day_button[0]:
             bot.send_message(message.chat.id, show_schedule("понедельник", sch.get_schedule(2, 1), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == day_button[1].lower():
+        elif message.text == day_button[1]:
             bot.send_message(message.chat.id, show_schedule("вторник", sch.get_schedule(2, 2), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == day_button[2].lower():
+        elif message.text == day_button[2]:
             bot.send_message(message.chat.id, show_schedule("среду", sch.get_schedule(2, 3), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == day_button[3].lower():
+        elif message.text == day_button[3]:
             bot.send_message(message.chat.id, show_schedule("четверг", sch.get_schedule(2, 4), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == day_button[4].lower():
+        elif message.text == day_button[4]:
             bot.send_message(message.chat.id, show_schedule("пятницу", sch.get_schedule(2, 5), '', '', ''),
                              parse_mode="HTML", reply_markup=day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
-        elif mtl == back_button.lower():
+        elif message.text == back_button:
             bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=week_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_choose)
         else:
@@ -351,23 +345,21 @@ def week_2(message):
 @bot.message_handler(content_types=['text'])
 def settings(message):
     try:
-        mtl = message.text.lower()
-
-        if mtl == links_button.lower():
+        if message.text == links_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, settings)
-        elif mtl == hotlines_button.lower():
+        elif message.text == hotlines_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, settings)
-        elif mtl == notifications_button.lower():
+        elif message.text == notifications_button.lower():
             bot.send_message(message.chat.id, 'Введите время (в формате HH:MM), в которое я пришлю уведомление',
                              reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=set_notification)
-        elif mtl == change_group_button.lower():
+        elif message.text == change_group_button:
             bot.send_message(message.chat.id, 'Для начала идентифицируй себя как "студент" или "преподаватель" 🙂',
                              reply_markup=re_register_keyboard)
             bot.register_next_step_handler(message, callback=re_registration)
-        elif mtl == back_button.lower():
+        elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
         else:
@@ -386,8 +378,7 @@ is_notification_on = False
 def set_notification(message):
     global is_notification_on
     try:
-        mtl = message.text.lower()
-        if re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", mtl):
+        if re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
             if not is_notification_on:
                 is_notification_on = True
                 schedule.every().day.at(message.text).do(lambda: send_notification(message))
@@ -397,7 +388,7 @@ def set_notification(message):
                 bot.send_message(message.chat.id, 'Время уже установлено', reply_markup=settings_keyboard)
                 bot.register_next_step_handler(message, callback=settings)
 
-        elif mtl == back_button.lower():
+        elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
         else:
