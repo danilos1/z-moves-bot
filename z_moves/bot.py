@@ -35,6 +35,7 @@ settings_keyboard.add(back_button)
 
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(current_day_button, tomorrow_day_button)
+main_menu_keyboard.add(session_button)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(info_button, help_button)
 

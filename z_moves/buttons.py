@@ -19,6 +19,7 @@ change_group_button = '‍🎓 Перерегистрироваться'
 current_day_button = "📝 Текущее расписание"
 tomorrow_day_button = "📝 Расписание на завтра"
 schedule_button = '📆 Расписание'
+session_button = '📆 Расписание сессии'
 settings_button = '⚙ Настройки'
 info_button = 'ℹ Инфо'
 help_button = '❓ Помощь'
