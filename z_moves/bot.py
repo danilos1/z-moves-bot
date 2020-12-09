@@ -536,6 +536,10 @@ def role_re_registration(message):
                 bot.send_message(message.chat.id, 'Введите название группы', reply_markup=back_button_keyboard)
                 bot.register_next_step_handler(message, callback=teacher_re_identification)
 
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'Двигаем назад', reply_markup=teachers_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
         bot.register_next_step_handler(message, callback=settings)
@@ -561,6 +565,7 @@ def teacher_re_identification(message):
                 bot.register_next_step_handler(message, callback=change_role_group)
 
         elif sch.role == 'преподаватель':
+
             if sch.is_group_exist(message.text):
                 sch.identify_as('студент', message.text)
                 bot.send_message(message.chat.id, 'Есть такая ^_^', reply_markup=settings_keyboard)
