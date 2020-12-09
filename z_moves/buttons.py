@@ -15,17 +15,20 @@ back_button = '⬅️Назад'
 links_button = '🔗 Ссылки'
 hotlines_button = '👺 Хотлайны'
 notifications_button = '🔕 Уведомления'
-change_group_button = '‍🎓 Перерегистрироваться'
+change_group_role_button = '‍🔧 Изменить группу/роль'
 
 current_day_button = "📝 Текущее расписание"
 tomorrow_day_button = "📝 Расписание на завтра"
 schedule_button = '📆 Расписание'
 session_button = '📆 Расписание сессии'
 settings_button = '⚙ Настройки'
-##################################
+
 info_button = 'ℹ Инфо'
 help_button = '❓ Помощь'
-#################################
+
+change_only_group_button = 'Группу'
+change_only_role_button = 'Роль'
+
 day_button = [
     '🤯 Пн'+(' ✅' if current_day == 0 else ''),
     '😫 Вт'+(' ✅' if current_day == 1 else ''),
