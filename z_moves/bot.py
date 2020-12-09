@@ -40,6 +40,7 @@ main_menu_keyboard.add(current_day_button, tomorrow_day_button)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(info_button, help_button)
 
+
 week_choose_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 week_choose_keyboard.add(week1_button, week2_button)
 week_choose_keyboard.add(back_button)
@@ -135,6 +136,10 @@ def re_registration(message):
 '''
 
 @bot.message_handler(content_types=['text'])
+
+
+
+@bot.message_handler(content_types=['text'])
 def teacher_registration(message):
     try:
         if message.text == back_button:
@@ -177,6 +182,11 @@ def student_registration(message):
 
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
+
+    info_message = "Имя бота: Z-Moves Bot\n\n" + \
+                   "Кто авторизован: " + sch.role + "\n\n" + \
+                   "Авторы:\nDanon(@danilos0)\nДимасик(@KickYourSelff)\nРостянский(@leap_sunrise)"
+
     try:
         if message.text == session_button:
             bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML', reply_markup=main_menu_keyboard)
@@ -191,7 +201,7 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == info_button:
-            bot.send_message(message.chat.id, develop_button, reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, info_message, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == help_button:
