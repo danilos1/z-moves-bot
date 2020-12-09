@@ -15,7 +15,7 @@ sch = Schedule()
 
 '''
 ########################################################################################################################
-                                              KEYBOARD SECTION
+                                              KEYBOARD SECTION BEGINNING
 ########################################################################################################################                               
 '''
 
@@ -25,13 +25,38 @@ back_button_keyboard.add(back_button)
 role_choose_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 role_choose_keyboard.add(student_button, teacher_button)
 
+change_group_role_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+change_group_role_keyboard.add(change_only_group_button, change_only_role_button)
+change_group_role_keyboard.add(back_button)
+
+role_change_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+role_change_keyboard.add(student_button, teacher_button)
+role_change_keyboard.add(back_button)
+
+group_change_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+group_change_keyboard.add(back_button)
+
+student_change_group_role_keyboard = change_group_role_keyboard
+
+teachers_change_group_role_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+teachers_change_group_role_keyboard.add(change_only_role_button)
+teachers_change_group_role_keyboard.add(back_button)
+
+student_changes_role_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+student_changes_role_keyboard.add(teacher_button)
+student_changes_role_keyboard.add(back_button)
+
+teacher_changes_role_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+teacher_changes_role_keyboard.add(student_button)
+teacher_changes_role_keyboard.add(back_button)
+
 re_register_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 re_register_keyboard.add(student_button, teacher_button)
 re_register_keyboard.add(back_button)
 
 settings_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 settings_keyboard.add(links_button, hotlines_button)
-settings_keyboard.add(notifications_button, change_group_button)
+settings_keyboard.add(notifications_button, change_group_role_button)
 settings_keyboard.add(back_button)
 
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -39,7 +64,6 @@ main_menu_keyboard.add(session_button)
 main_menu_keyboard.add(current_day_button, tomorrow_day_button)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(info_button, help_button)
-
 
 week_choose_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 week_choose_keyboard.add(week1_button, week2_button)
@@ -57,12 +81,21 @@ day_choose_keyboard.add(
 
 '''
 ########################################################################################################################
+                                              KEYBOARD SECTION ENDING
+########################################################################################################################                               
+'''
+
+'''
+########################################################################################################################
                                                 BOT START
 ########################################################################################################################
 '''
+
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
+
         bot.send_message(message.chat.id, '''
 О, привет! 🥴🤙
 Z-Moves на связи 😎
@@ -72,62 +105,34 @@ Z-Moves на связи 😎
 
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
-        bot.register_next_step_handler(message, callback=registration)
-
-
-@bot.message_handler(content_types=['text'])
-def identification(message):
-    bot.send_message(message.chat.id, 'Для начала идентифицируй себя как "студент" или "преподаватель" 🙂', reply_markup=re_register_keyboard)
-    bot.register_next_step_handler(message, callback=re_registration)
+        bot.register_next_step_handler(message, callback=start_message)
 
 
 @bot.message_handler(content_types=['text'])
 def registration(message):
     try:
+
         if message.text == student_button:
             bot.send_message(message.chat.id,
                              'Привет, трудяга! Чтобы показать расписание, мне нужно узнать твою группу 🙂',
-                             reply_markup=re_register_keyboard)
+                             reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=student_registration)
 
         elif message.text == teacher_button:
             bot.send_message(message.chat.id,
-                    'Добрый день! Чтобы показать Ваше расписание, мне нужно узнать Ваше полное имя, фамилию и отчество украинском 🙂',
-                    reply_markup=re_register_keyboard
-            )
+                             'Добрый день! Чтобы показать Ваше расписание, мне нужно узнать Ваше полное имя, фамилию и отчество украинском 🙂',
+                             reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=teacher_registration)
-        elif message.text == back_button:
-            bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
-            bot.register_next_step_handler(message, callback=re_registration)
+
         else:
-            bot.send_message(message.chat.id, 'Не могу вас идентифицировать. Попробуйте еще раз', reply_markup=role_choose_keyboard)
+            bot.send_message(message.chat.id, 'Не могу вас идентифицировать. Попробуйте еще раз',
+                             reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=registration)
+
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
         bot.register_next_step_handler(message, callback=settings)
 
-
-@bot.message_handler(content_types=['text'])
-def re_registration(message):
-    try:
-        if message.text == student_button:
-            bot.send_message(message.chat.id, 'Введи новую группу 🙂')
-            bot.register_next_step_handler(message, callback=student_registration)
-
-        elif message.text == teacher_button:
-            bot.send_message(message.chat.id,
-                    'Введите Ваше полное имя, фамилию и отчество на украинском 🙂'
-            )
-            bot.register_next_step_handler(message, callback=teacher_registration)
-        elif message.text == back_button:
-            bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
-            bot.register_next_step_handler(message, callback=settings)
-        else:
-            bot.send_message(message.chat.id, 'Не могу вас идентифицировать. Попробуйте еще раз', reply_markup=role_choose_keyboard)
-            bot.register_next_step_handler(message, callback=registration)
-    except AttributeError:
-        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
-        bot.register_next_step_handler(message, callback=settings)
 
 '''                        
 ########################################################################################################################                    
@@ -135,16 +140,15 @@ def re_registration(message):
 ########################################################################################################################                                                       
 '''
 
-@bot.message_handler(content_types=['text'])
-
-
 
 @bot.message_handler(content_types=['text'])
 def teacher_registration(message):
     try:
+
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=registration)
+
         else:
             if sch.is_teacher_exist(message.text):
                 sch.identify_as('преподаватель', message.text)
@@ -160,6 +164,7 @@ def teacher_registration(message):
         bot.send_message(message.chat.id, 'Такие данные мне подходят 🙂')
         bot.register_next_step_handler(message, callback=teacher_registration)
 
+
 @bot.message_handler(content_types=['text'])
 def student_registration(message):
     try:
@@ -169,7 +174,8 @@ def student_registration(message):
         else:
             if sch.is_group_exist(message.text):
                 sch.identify_as('студент', message.text)
-                bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
+                bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
+                                 reply_markup=main_menu_keyboard)
                 bot.register_next_step_handler(message, callback=main_menu)
             else:
                 bot.send_message(message.chat.id, '''Ой, что-то я о такой группе не слышал 🤥\nПоробуй ещё''')
@@ -182,14 +188,14 @@ def student_registration(message):
 
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-
     info_message = "Имя бота: Z-Moves Bot\n\n" + \
                    "Кто авторизован: " + sch.role + "\n\n" + \
                    "Авторы:\nDanon(@danilos0)\nДимасик(@KickYourSelff)\nРостянский(@leap_sunrise)"
 
     try:
         if message.text == session_button:
-            bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML', reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML',
+                             reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == schedule_button:
@@ -355,23 +361,36 @@ def week_2(message):
 @bot.message_handler(content_types=['text'])
 def settings(message):
     try:
+
         if message.text == links_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, settings)
+
         elif message.text == hotlines_button:
             bot.send_message(message.chat.id, develop_button, reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, settings)
+
         elif message.text == notifications_button.lower():
             bot.send_message(message.chat.id, 'Введите время (в формате HH:MM), в которое я пришлю уведомление',
                              reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=set_notification)
-        elif message.text == change_group_button:
-            bot.send_message(message.chat.id, 'Для начала идентифицируй себя как "студент" или "преподаватель" 🙂',
-                             reply_markup=re_register_keyboard)
-            bot.register_next_step_handler(message, callback=re_registration)
+
+        elif message.text == change_group_role_button:
+
+            if sch.role == 'студент':
+                bot.send_message(message.chat.id, 'Меняй роль или группу. Приказ.',
+                                 reply_markup=student_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
+            elif sch.role == 'преподаватель':
+                bot.send_message(message.chat.id, 'Меняй роль. Приказ.',
+                                 reply_markup=teachers_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
         elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
+
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
@@ -388,6 +407,7 @@ is_notification_on = False
 def set_notification(message):
     global is_notification_on
     try:
+
         if re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
             if not is_notification_on:
                 is_notification_on = True
@@ -424,6 +444,142 @@ def send_notification(message):
 
 notification_thread = Thread(target=schedule_checker)
 notification_thread.start()
+
+'''                                            
+########################################################################################################################
+                                        CHANGE ROLE/GROUP PROCESS BEGINNING
+########################################################################################################################                                                                 
+'''
+
+
+@bot.message_handler(content_types=['text'])
+def change_role_group(message):
+    try:
+
+        if sch.role == 'студент':
+
+            if message.text == change_only_group_button:
+                bot.send_message(message.chat.id, 'Введи название группы', reply_markup=back_button_keyboard)
+                bot.register_next_step_handler(message, callback=group_re_registration)
+
+            elif message.text == change_only_role_button:
+                bot.send_message(message.chat.id, 'Выбери роль', reply_markup=student_changes_role_keyboard)
+                bot.register_next_step_handler(message, callback=role_re_registration)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'Мувимся назад', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+
+        elif sch.role == 'преподаватель':
+
+            if message.text == change_only_role_button:
+                bot.send_message(message.chat.id, 'Выберите роль', reply_markup=teacher_changes_role_keyboard)
+                bot.register_next_step_handler(message, callback=role_re_registration)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'Мувимся назад', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+
+        else:
+            bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+            bot.register_next_step_handler(message, callback=settings)
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+        bot.register_next_step_handler(message, callback=settings)
+
+
+@bot.message_handler(content_types=['text'])
+def group_re_registration(message):
+    try:
+
+        if sch.role == 'студент':
+
+            if sch.is_group_exist(message.text):
+                sch.identify_as('студент', message.text)
+                bot.send_message(message.chat.id, 'Есть такая ^_^', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'Movaiemsia back', reply_markup=student_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
+        else:
+            bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=change_group_role_keyboard)
+            bot.register_next_step_handler(message, callback=change_role_group)
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+        bot.register_next_step_handler(message, callback=settings)
+
+
+@bot.message_handler(content_types=['text'])
+def role_re_registration(message):
+    try:
+        if sch.role == 'студент':
+
+            if message.text == teacher_button:
+                bot.send_message(message.chat.id, 'Введите ФИО', reply_markup=back_button_keyboard)
+                bot.register_next_step_handler(message, callback=teacher_re_identification)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'Двигаем назад', reply_markup=student_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
+            else:
+                bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=student_change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
+        elif sch.role == 'преподаватель':
+
+            if message.text == student_button:
+                bot.send_message(message.chat.id, 'Введите название группы', reply_markup=back_button_keyboard)
+                bot.register_next_step_handler(message, callback=teacher_re_identification)
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+        bot.register_next_step_handler(message, callback=settings)
+
+
+@bot.message_handler(content_types=['text'])
+def teacher_re_identification(message):
+    try:
+        if sch.role == 'студент':
+
+            if sch.is_teacher_exist(message.text):
+                sch.identify_as('преподаватель', message.text)
+                bot.send_message(message.chat.id, 'Добрый день, {0}!'.format(sch.get_teacher_name(message.text)),
+                                 reply_markup=main_menu_keyboard)
+                bot.register_next_step_handler(message, callback=main_menu)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'move bakkkk', reply_markup=student_changes_role_keyboard)
+                bot.register_next_step_handler(message, callback=role_re_registration)
+
+            else:
+                bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=change_group_role_keyboard)
+                bot.register_next_step_handler(message, callback=change_role_group)
+
+        elif sch.role == 'преподаватель':
+            if sch.is_group_exist(message.text):
+                sch.identify_as('студент', message.text)
+                bot.send_message(message.chat.id, 'Есть такая ^_^', reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+
+            elif message.text == back_button:
+                bot.send_message(message.chat.id, 'move bakkkk', reply_markup=teacher_changes_role_keyboard)
+                bot.register_next_step_handler(message, callback=role_re_registration)
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+        bot.register_next_step_handler(message, callback=settings)
+
+
+'''                                            
+########################################################################################################################
+                                        CHANGE ROLE/GROUP PROCESS BEGINNING
+########################################################################################################################                                                                 
+'''
 
 if __name__ == '__main__':
     bot.polling()
