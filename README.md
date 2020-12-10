@@ -18,7 +18,7 @@ You saw main menu. And now you choose any buttons:
 * 📝 Расписание 
 * ⚙ Настройки
 * ℹ Инфо
-> Information about your registration (student or teacher).
+  > Information about your registration (student or teacher).
 * ❓ Помощь
 
 If you chosen "⚙ Настройки" you will see this menu:
