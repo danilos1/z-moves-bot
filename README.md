@@ -7,7 +7,7 @@ So, our a little team create specially for you telegram bot.
 <hr>
 
 ## Features and how to use
-In begin you need authorized and type your group:
+In begin you can chose how authorize, student or teacher. In the next question type your group:
 
 ![Start bot](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_20-31-38.png)
 
