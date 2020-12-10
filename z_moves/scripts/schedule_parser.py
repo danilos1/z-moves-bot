@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import z_moves.dao.session_db as sdb
+import z_moves.scripts.session_db as sdb
+import z_moves.scripts.db as db
 
 free = '''
 ░░▄█████████████████▄
@@ -48,7 +49,7 @@ def get_current_week():
     return week
 
 
-def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
+def show_schedule(day: str, sch: str, hl: str):
     return 'Запланированные мувы на ' + day + ':\n' + '''
 ———————————————
 {schedule}
@@ -56,10 +57,7 @@ def show_schedule(day: str, sch: str, hl: str, gl: str, aw: str):
 👺 Hotlines: 
 {hotlines}
 ———————————————
-{global_links}
-———————————————
-{afterword}
-'''.format(schedule=sch, hotlines=hl, global_links=gl, afterword=aw)
+'''.format(schedule=sch, hotlines=hl)
 
 
 def show_exams(sch: str):
@@ -136,7 +134,6 @@ class Schedule:
         self.role = role
 
     def get_session_for_schedule(self):
-        print(self.id)
         full_url = session_url + sdb.session_tokens[self.id]
         req = requests.get(full_url)
         soup = BeautifulSoup(req.content, 'html.parser')

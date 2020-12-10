@@ -12,6 +12,7 @@ from z_moves.scripts.schedule_parser import *
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 sch = Schedule()
+db.init_db()
 
 '''
 ########################################################################################################################
@@ -95,7 +96,7 @@ day_choose_keyboard.add(
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
-
+        db.add_user(message.chat.id)
         bot.send_message(message.chat.id, '''
 О, привет! 🥴🤙
 Z-Moves на связи 😎
@@ -111,7 +112,6 @@ Z-Moves на связи 😎
 @bot.message_handler(content_types=['text'])
 def registration(message):
     try:
-
         if message.text == student_button:
             bot.send_message(message.chat.id,
                              'Привет, трудяга! Чтобы показать расписание, мне нужно узнать твою группу 🙂',
@@ -137,7 +137,6 @@ def registration(message):
 @bot.message_handler(content_types=['text'])
 def teacher_registration(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=role_choose_keyboard)
             bot.register_next_step_handler(message, callback=registration)
@@ -188,7 +187,6 @@ def student_registration(message):
 
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-    global info_message
 
     info_message = "————— <b>Z-Moves Bot</b> —————\n\n" + \
                    "Бот создан с целью уведомлять пользователей по поводу расписания.\n\n" + \
@@ -208,7 +206,7 @@ def main_menu(message):
                    "-❓ Помощь (Я есть грут)\n"
     try:
         if message.text == session_button:
-            bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML',
+            bot.send_message(message.chat.id, sch.get_session_or_schedule(), parse_mode='HTML',
                              reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
@@ -229,13 +227,13 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == current_day_button:
-            s = show_day("Сегодня", date.today().weekday() + 1)
+            s = show_day(message.chat.id, "Сегодня", date.today().weekday() + 1)
             bot.send_message(message.chat.id, s, parse_mode="HTML", reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == tomorrow_day_button:
             tomorrow = (date.today() + datetime.timedelta(days=1)).weekday() + 1
-            s = show_day("Завтра", tomorrow)
+            s = show_day(message.chat.id, "Завтра", tomorrow)
             bot.send_message(message.chat.id, s, parse_mode="HTML", reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
         else:
@@ -259,13 +257,19 @@ def main_menu(message):
 '''
 
 
-def show_day(wd: str, day: int):
-    if day > 4:
+def show_day(user_id: int, wd: str, day: int):
+    if day > 5:
         s = wd + ' пар нету. Отдыхаем'
     else:
+        hotlines = db.get_hotline_by_id(user_id)
+
+        hotline_text = '\n'
+        for h in hotlines:
+            hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + ' ℹ️\n'
+
         weekday = week_days[day]
         cur_week = get_current_week()
-        s = show_schedule(weekday, sch.get_schedule(cur_week, day), '', '', '')
+        s = show_schedule(weekday, sch.get_schedule(cur_week, day), hotline_text)
     return s
 
 
@@ -388,9 +392,12 @@ def settings(message):
             bot.register_next_step_handler(message, settings)
 
         elif message.text == hotlines_button:
-            bot.send_message(message.chat.id, 'Введи название предмета, к которому нужно присобачить хотлай',
+            bot.send_message(message.chat.id,
+                             'Для добавления хотлайна, тебе стоит прописать дедлайн в слудующем формате:\n\n' + \
+                             '<pre>Название предмета|Описание работы|Срок выполнения|Ссылка(опционально)</pre>',
+                             parse_mode='HTML',
                              reply_markup=back_button_keyboard)
-            bot.register_next_step_handler(message, callback=hotline_setting_name)
+            bot.register_next_step_handler(message, callback=adding_hotline)
 
         elif message.text == notifications_button:
             bot.send_message(message.chat.id, 'Введите время (в формате HH:MM), в которое я пришлю уведомление',
@@ -400,12 +407,12 @@ def settings(message):
         elif message.text == change_group_role_button:
 
             if sch.role == 'студент':
-                bot.send_message(message.chat.id, 'Меняй роль или группу. Приказ.',
+                bot.send_message(message.chat.id, 'Меняй роль или группу.',
                                  reply_markup=student_change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
             elif sch.role == 'преподаватель':
-                bot.send_message(message.chat.id, 'Меняй роль. Приказ.',
+                bot.send_message(message.chat.id, 'Меняй роль.',
                                  reply_markup=teachers_change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
@@ -453,7 +460,7 @@ def set_notification(message):
                 bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == back_button:
-            bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=settings_keyboard)
+            bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
         else:
             bot.send_message(message.chat.id, 'Немножечко не по формату :(', reply_markup=back_button_keyboard)
@@ -507,45 +514,32 @@ notification_thread.start()
 
 
 @bot.message_handler(content_types=['text'])
-def hotline_setting_name(message):
+def adding_hotline(message):
     try:
-
         if message.text == back_button:
-            bot.send_message(message.chat.id, 'Ну ладно...', reply_markup=settings_keyboard)
+            bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, callback=settings)
-
         else:
-            bot.send_message(message.chat.id, 'ещё масинькое описание (лаб, кр или шото такое ну крч ты понял)',
-                             reply_markup=back_button_keyboard)
-            bot.register_next_step_handler(message, callback=hotline_setting_description)
+            hotlines = message.text.split('|')
+            if len(hotlines) == 3:
+                db.add_hotline_without_link(message.chat.id, hotlines[0], hotlines[1], hotlines[2])
+                bot.send_message(message.chat.id,
+                                 'Хотлайн был успешно добавлен. Теперь его можно будет наблюдать в вашем расписание 🙂',
+                                 reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
 
+            elif len(hotlines) == 4:
+                db.add_hotline(message.chat.id, hotlines[0], hotlines[1], hotlines[2], hotlines[3])
+                bot.send_message(message.chat.id,
+                                 'Хотлайн был успешно добавлен. Теперь его можно будет наблюдать в вашем расписание 🙂',
+                                 reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+            else:
+                bot.send_message(message.chat.id, 'Неверный формат для занесения хотлайна. Попробуйте еще..', reply_markup=back_button_keyboard)
+                bot.register_next_step_handler(message, callback=adding_hotline)
     except AttributeError:
-        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=back_button_keyboard)
-        bot.register_next_step_handler(message, callback=hotline_setting_description)
-
-
-@bot.message_handler(content_types=['text'])
-def hotline_setting_description(message):
-    if message.text == back_button:
-        bot.send_message(message.chat.id, 'желаешь изменить название хотлайна?', reply_markup=back_button_keyboard)
-        bot.register_next_step_handler(message, callback=hotline_setting_name)
-
-    else:
-        bot.send_message(message.chat.id, 'ну и ласт штрих — дата (DD.MM)', reply_markup=back_button_keyboard)
-        bot.register_next_step_handler(message, callback=hotline_setting_date)
-
-
-@bot.message_handler(content_types=['text'])
-def hotline_setting_date(message):
-    if message.text == back_button:
-        bot.send_message(message.chat.id, 'надо изменить описание?', reply_markup=back_button_keyboard)
-        bot.register_next_step_handler(message, callback=hotline_setting_description)
-
-    else:
-        bot.send_message(message.chat.id, 'Готово! Хотлайн будет отображаться у тебя в расписании',
-                         reply_markup=settings_keyboard)
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
         bot.register_next_step_handler(message, callback=settings)
-
 
 '''
 ########################################################################################################################
@@ -609,7 +603,7 @@ def group_re_registration(message):
                 bot.register_next_step_handler(message, callback=settings)
 
             elif message.text == back_button:
-                bot.send_message(message.chat.id, 'Movaiemsia back', reply_markup=student_change_group_role_keyboard)
+                bot.send_message(message.chat.id, 'Возвращаюсь назад...', reply_markup=student_change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
         else:
@@ -627,11 +621,11 @@ def role_re_registration(message):
         if sch.role == 'студент':
 
             if message.text == teacher_button:
-                bot.send_message(message.chat.id, 'Введите ФИО', reply_markup=back_button_keyboard)
+                bot.send_message(message.chat.id, 'Введите ваше ФИО (на украинском)', reply_markup=back_button_keyboard)
                 bot.register_next_step_handler(message, callback=teacher_re_identification)
 
             elif message.text == back_button:
-                bot.send_message(message.chat.id, 'Двигаем назад', reply_markup=student_change_group_role_keyboard)
+                bot.send_message(message.chat.id, 'Возвращаюсь назад...', reply_markup=student_change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
             else:
