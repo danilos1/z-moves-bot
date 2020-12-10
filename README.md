@@ -6,8 +6,12 @@ This bot is intended for showing KPI schedule for any group and any teacher. Sim
 So, our a little team create specially for you telegram bot. 
 <hr>
 
-##Features
-In begin you need authorized:
+## Features and how to use
+In begin you need authorized and type your group:
+![]()
+
+
+
 
 
 # License
