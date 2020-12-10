@@ -7,9 +7,13 @@ So, our a little team create specially for you telegram bot.
 <hr>
 
 ## Features and how to use
-In begin you can chose how authorize, student or teacher. In the next question type your group:
+In begin you can chose how authorize, student or teacher:
 
-![Start bot](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_20-31-38.png)
+![Chose rule](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-11_00-49-20.png)
+
+In the next question type your group:
+
+![Main menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_20-31-38.png)
 
 You saw main menu. And now you choose any buttons:
 * 📆 Расписание сессии
