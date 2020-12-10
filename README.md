@@ -20,6 +20,7 @@ You saw main menu. And now you choose any buttons:
 * 📝 Текущее расписание
 * 📝 Расписание на завтра
 * 📝 Расписание 
+    * Here you can find out schedule to any day of week. 
 * ⚙ Настройки
 * ℹ Инфо
 * ❓ Помощь
