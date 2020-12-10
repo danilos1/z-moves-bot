@@ -9,9 +9,9 @@ So, our a little team create specially for you telegram bot.
 ## Features and how to use
 In begin you need authorized and type your group:
 ![Start bot](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_20-31-38.png)
+
 You saw main menu. And now you choose any buttons:
 * 📆 Расписание сессии
-** уцу
 * 📝 Текущее расписание
 * 📝 Расписание на завтра
 * 📝 Расписание 
@@ -19,6 +19,8 @@ You saw main menu. And now you choose any buttons:
 * ℹ Инфо
 * ❓ Помощь
 
+If you chosen "⚙ Настройки" you will see this menu:
+![Setting menu]()
 
 
 
