@@ -185,30 +185,26 @@ def student_registration(message):
 ########################################################################################################################                                                       
 '''
 
+
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
     global info_message
 
-    if sch.role == 'студент':
-        info_message = "------------------ Z-Moves Bot ------------------\n\n" + \
-                       "Кто авторизован: " + sch.role +", " + sch.id.upper() + "\n\n" + \
-                       "Авторы:\nDanon(@danilos0)\nДимасик(@KickYourSelff)\nРостянский(@leap_sunrise)"
-
-    elif sch.role == 'преподаватель':
-        info_message = "------------------ Z-Moves Bot ------------------\n\n" + \
-                       "Кто авторизован: " + sch.role +", " + sch.id + "\n\n" + \
-                       "Авторы:\nDanon(@danilos0)\nДимасик(@KickYourSelff)\nРостянский(@leap_sunrise)"
-
-    help_message = "Что может бот ?\n\n" + \
+    info_message = "————— <b>Z-Moves Bot</b> —————\n\n" + \
                    "Бот создан с целью уведомлять пользователей по поводу расписания.\n\n" + \
+                   "Вы авторизованы как: " + sch.role + ", " + (
+                       sch.id.upper() if sch.id == 'студент' else sch.id) + "\n\n" + \
+                   "Авторы:\nDanon(@danilos0)\nДимасик(@KickYourSelff)\nРостянский(@leap_sunrise)"
+
+    help_message = "<b>Что может бот ?</b>\n\n" + \
                    "Пользователь может авторизоваться как студент или преподаватель.\n\n" + \
                    "Потом пользователь попадает в главное меню, где он может узнать:\n\n" + \
-                   "-📆 Расписание сессии (Расписание ваших экзаменов)\n" + \
-                   "-📝 Текущее расписание (Расписание на этот день, но не забывайте про выходные)\n" + \
-                   "-📝 Расписание на завтра (Расписание на завтрашний день, если это не выходной)\n" + \
-                   "-📆 Расписание (Расписание на целую неделю (На первую или вторую))\n" + \
-                   "-⚙ Настройки (Отключение уведомлений, дедлайны, возможность перерегистрации, отключение уведомлений от бота)\n" + \
-                   "-ℹ Инфо (Общая информация)\n" + \
+                   "-📆 Расписание сессии (Расписание ваших экзаменов)\n\n" + \
+                   "-📝 Текущее расписание (Расписание на этот день, но не забывайте про выходные)\n\n" + \
+                   "-📝 Расписание на завтра (Расписание на завтрашний день, если это не выходной)\n\n" + \
+                   "-📆 Расписание (Расписание на целую неделю (На первую или вторую))\n\n" + \
+                   "-⚙ Настройки (Отключение уведомлений, дедлайны, возможность перерегистрации, отключение уведомлений от бота)\n\n" + \
+                   "-ℹ Инфо (Общая информация)\n\n" + \
                    "-❓ Помощь (Я есть грут)\n"
     try:
         if message.text == session_button:
@@ -225,11 +221,11 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == info_button:
-            bot.send_message(message.chat.id, info_message, reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, info_message, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == help_button:
-            bot.send_message(message.chat.id, develop_button, reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, help_message, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == current_day_button:
@@ -255,7 +251,6 @@ def main_menu(message):
                                                  MAIN MENU TREE END
 ########################################################################################################################                                                       
 '''
-
 
 '''
 ########################################################################################################################                                            
@@ -388,11 +383,13 @@ def settings(message):
     try:
 
         if message.text == links_button:
-            bot.send_message(message.chat.id, 'Выбери предмет, к которому нужно добавить ссылку', reply_markup=settings_keyboard)
+            bot.send_message(message.chat.id, 'Выбери предмет, к которому нужно добавить ссылку',
+                             reply_markup=settings_keyboard)
             bot.register_next_step_handler(message, settings)
 
         elif message.text == hotlines_button:
-            bot.send_message(message.chat.id, 'Введи название предмета, к которому нужно присобачить хотлай', reply_markup=back_button_keyboard)
+            bot.send_message(message.chat.id, 'Введи название предмета, к которому нужно присобачить хотлай',
+                             reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=hotline_setting_name)
 
         elif message.text == notifications_button:
@@ -436,7 +433,6 @@ def settings(message):
                                                   NOTIFICATION PROCESS BEGINNING
 ########################################################################################################################                                                                 
 '''
-
 
 is_notification_on = False
 
@@ -483,13 +479,11 @@ def send_notification(message):
 notification_thread = Thread(target=schedule_checker)
 notification_thread.start()
 
-
 '''                                            
 ########################################################################################################################
                                                   NOTIFICATION PROCESS END
 ########################################################################################################################                                                                 
 '''
-
 
 '''                                            
 ########################################################################################################################
@@ -504,7 +498,6 @@ notification_thread.start()
                                                   LINKS PROCESS END
 ########################################################################################################################
 '''
-
 
 '''                                            
 ########################################################################################################################
@@ -522,7 +515,8 @@ def hotline_setting_name(message):
             bot.register_next_step_handler(message, callback=settings)
 
         else:
-            bot.send_message(message.chat.id, 'ещё масинькое описание (лаб, кр или шото такое ну крч ты понял)', reply_markup=back_button_keyboard)
+            bot.send_message(message.chat.id, 'ещё масинькое описание (лаб, кр или шото такое ну крч ты понял)',
+                             reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=hotline_setting_description)
 
     except AttributeError:
@@ -532,7 +526,6 @@ def hotline_setting_name(message):
 
 @bot.message_handler(content_types=['text'])
 def hotline_setting_description(message):
-
     if message.text == back_button:
         bot.send_message(message.chat.id, 'желаешь изменить название хотлайна?', reply_markup=back_button_keyboard)
         bot.register_next_step_handler(message, callback=hotline_setting_name)
@@ -544,15 +537,14 @@ def hotline_setting_description(message):
 
 @bot.message_handler(content_types=['text'])
 def hotline_setting_date(message):
-
     if message.text == back_button:
         bot.send_message(message.chat.id, 'надо изменить описание?', reply_markup=back_button_keyboard)
         bot.register_next_step_handler(message, callback=hotline_setting_description)
 
     else:
-        bot.send_message(message.chat.id, 'Готово! Хотлайн будет отображаться у тебя в расписании', reply_markup=settings_keyboard)
+        bot.send_message(message.chat.id, 'Готово! Хотлайн будет отображаться у тебя в расписании',
+                         reply_markup=settings_keyboard)
         bot.register_next_step_handler(message, callback=settings)
-
 
 
 '''
@@ -560,7 +552,6 @@ def hotline_setting_date(message):
                                                     HOTLINES END
 ########################################################################################################################
 '''
-
 
 '''
 ########################################################################################################################
@@ -644,7 +635,8 @@ def role_re_registration(message):
                 bot.register_next_step_handler(message, callback=change_role_group)
 
             else:
-                bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=student_change_group_role_keyboard)
+                bot.send_message(message.chat.id, 'i dont understand, sorry bro',
+                                 reply_markup=student_change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
         elif sch.role == 'преподаватель':
@@ -678,7 +670,8 @@ def teacher_re_identification(message):
                 bot.register_next_step_handler(message, callback=role_re_registration)
 
             else:
-                bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=change_group_role_keyboard)
+                bot.send_message(message.chat.id, 'i dont understand, sorry bro',
+                                 reply_markup=change_group_role_keyboard)
                 bot.register_next_step_handler(message, callback=change_role_group)
 
         elif sch.role == 'преподаватель':
