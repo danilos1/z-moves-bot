@@ -18,14 +18,19 @@ You saw main menu. And now you choose any buttons:
 * 📝 Расписание 
 * ⚙ Настройки
 * ℹ Инфо
-  > Information about your registration (student or teacher).
 * ❓ Помощь
 
 If you chosen "⚙ Настройки" you will see this menu:
 
 ![Setting menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_23-08-50.png)
 
-
+And this menu you can chose several buttons:
+* 🔗 Ссылки
+* 👺 Хотлайны
+    * уйцуйц
+* 🔕 Уведомления
+* 🔧 Изменить группу/роль
+* ⬅️Назад
 
 # License
 The code is under [MIT License](https://github.com/danilos1/z-moves-bot/blob/main/LICENSE)
