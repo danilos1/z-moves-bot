@@ -26,10 +26,13 @@ If you chosen "⚙ Настройки" you will see this menu:
 
 And this menu you can chose several buttons:
 * 🔗 Ссылки
+      * Here show your added deadlines.
 * 👺 Хотлайны
-    * уйцуйц
+      * Here you put your deadline.
 * 🔕 Уведомления
+      * Here you put notifications. 
 * 🔧 Изменить группу/роль
+      * Here group and rule
 * ⬅️Назад
 
 # License
