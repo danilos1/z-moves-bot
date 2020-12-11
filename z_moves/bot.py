@@ -5,6 +5,7 @@ import telebot
 import os
 import re
 import schedule
+from z_moves.scripts.session_db import *
 from time import sleep
 from threading import Thread
 from z_moves.buttons import *
@@ -215,12 +216,18 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == links_button:
-            bot.send_message(message.chat.id, '————— Links —————\n\n' + get_links(message.chat.id), reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, '————— 🔗 Links —————\n\n' + get_links(message.chat.id),
+                             parse_mode='HTML',
+                             disable_web_page_preview=True,
+                             reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == hotlines_button:
-            hotlines = '————— Hotlines —————\n\n' + get_hotlines(message.chat.id)
-            bot.send_message(message.chat.id, hotlines, reply_markup=main_menu_keyboard)
+            hotlines = '————— 👺 Hotlines —————\n\n' + get_hotlines(message.chat.id)
+            bot.send_message(message.chat.id, hotlines,
+                             parse_mode='HTML',
+                             disable_web_page_preview=True,
+                             reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == info_button:
@@ -266,9 +273,16 @@ def show_day(user_id: int, wd: str, day: int):
 def schedule_choose(message):
     try:
         if message.text == session_button:
-            bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML',
-                             reply_markup=schedule_choose_keyboard)
-            bot.register_next_step_handler(message, callback=schedule_choose)
+            if session_tokens.__contains__(sch.id):
+                bot.send_message(message.chat.id, sch.get_session_for_schedule(), parse_mode='HTML',
+                                 reply_markup=schedule_choose_keyboard)
+                bot.register_next_step_handler(message, callback=schedule_choose)
+            else:
+                bot.send_message(message.chat.id,
+                                 develop_button + \
+                                 '. \nНа данном этапе расписание сессии отображается только для групп і(о|в)-8X',
+                                 reply_markup=schedule_choose_keyboard)
+                bot.register_next_step_handler(message, callback=schedule_choose)
         elif message.text == today_day_button:
             s = show_day(message.chat.id, "Сегодня", date.today().weekday() + 1)
             bot.send_message(message.chat.id, s, parse_mode="HTML", reply_markup=schedule_choose_keyboard)
@@ -582,9 +596,7 @@ def adding_hotline(message):
 @bot.message_handler(content_types=['text'])
 def change_role_group(message):
     try:
-
         if sch.role == 'студент':
-
             if message.text == change_only_group_button:
                 bot.send_message(message.chat.id, 'Введи название группы', reply_markup=back_button_keyboard)
                 bot.register_next_step_handler(message, callback=group_re_registration)
@@ -619,7 +631,6 @@ def change_role_group(message):
 @bot.message_handler(content_types=['text'])
 def group_re_registration(message):
     try:
-
         if sch.role == 'студент':
 
             if sch.is_group_exist(message.text):

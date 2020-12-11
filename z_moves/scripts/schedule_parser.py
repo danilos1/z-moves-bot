@@ -45,17 +45,25 @@ subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
 def get_links(user_id):
     links = db.get_links_by_id(user_id)
-    links_text = '\n'
-    for l in links:
-        links_text += 'ℹ️ ' + l[0] + ' — ' + l[1]
+    links_text = ''
+    if len(links) == 0:
+        links_text = 'Вы еще не добавили ни одной ссылки.\nДля занесения ссылки перейдите в настройки ⚙'
+    else:
+        for l in links:
+            HL = 'ℹ️  <a href="{link}">{text}</a>\n'
+            links_text += HL.format(link=l[0], text=l[1])
 
     return links_text
 
 def get_hotlines(user_id):
     hotlines = db.get_hotline_by_id(user_id)
-    hotline_text = '\n'
-    for h in hotlines:
-        hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + ' ℹ️\n'
+    hotline_text = ''
+    if len(hotlines) == 0:
+        hotline_text = 'На текущий момент я не наблюдаю хотлайнов ☺️.\nДля занесения хотлайна перейдите в настройки ⚙'
+    else:
+        for h in hotlines:
+            HL = ' <a href="{link}">{text}</a>\n'
+            hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + HL.format(link=h[3], text=' ℹ️')
 
     return hotline_text
 
@@ -83,6 +91,7 @@ def show_exams(sch: str):
 {schedule}
 ———————————————
 '''.format(schedule=sch)
+
 
 
 class Schedule:
