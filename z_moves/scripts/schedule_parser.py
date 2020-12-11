@@ -58,7 +58,8 @@ def get_current_week():
     return week
 
 
-def show_schedule(day: str, sch: str, hl: str):
+def show_schedule(user_id, day: str, sch: str):
+    hl = get_hotlines(user_id)
     return 'Запланированные мувы на ' + day + ':\n' + '''
 ———————————————
 {schedule}
