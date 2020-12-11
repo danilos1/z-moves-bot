@@ -17,6 +17,7 @@ def init_db(force: bool = False):
     if force:
         c.execute('DROP TABLE IF EXISTS users')
         c.execute('DROP TABLE IF EXISTS hotline')
+        c.execute('DROP TABLE IF EXISTS links')
 
     c.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -35,6 +36,16 @@ def init_db(force: bool = False):
             foreign key(user_id) references users(user_id)
         )
     ''')
+
+    c.execute('''
+            CREATE TABLE IF NOT EXISTS links (
+                user_id      int,
+                link         text not null,
+                description  text not null,
+
+                foreign key(user_id) references users(user_id)
+            )
+        ''')
 
     conn.commit()
 
@@ -62,6 +73,14 @@ def add_hotline_without_link(user_id: int, subject: str, task: str, deadline):
         (user_id, subject, task, deadline)
     )
 
+def add_links(user_id: int, link: str, description: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO links (user_id, link, description) VALUES (?, ?, ?)',
+        (user_id, link, description)
+    )
+
 def get_hotline_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
@@ -69,6 +88,10 @@ def get_hotline_by_id(uid: int):
 
     return c.fetchall()
 
+def get_links_by_id(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT link, description FROM links WHERE user_id = ?', (uid,))
 
 def get_all_hotlines():
     conn = get_connection()
@@ -83,7 +106,6 @@ def get_all_users():
     c.execute('SELECT user_id FROM users')
 
     return c.fetchall()
-
 
 if __name__ == '__main__':
     init_db()
