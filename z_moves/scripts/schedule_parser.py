@@ -43,6 +43,15 @@ lesson_numbers = {
 
 subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
+
+def get_hotlines(user_id):
+    hotlines = db.get_hotline_by_id(user_id)
+    hotline_text = '\n'
+    for h in hotlines:
+        hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + ' ℹ️\n'
+
+    return hotline_text
+
 def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
     week = requests.get(weekUrl).json()['data']
