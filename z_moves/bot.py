@@ -215,7 +215,7 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == links_button:
-            bot.send_message(message.chat.id, '————— Links —————', reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, '————— Links —————\n\n' + get_links(message.chat.id), reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == hotlines_button:
@@ -388,9 +388,14 @@ def week_2(message):
 def settings(message):
     try:
         if message.text == add_link_button:
-            bot.send_message(message.chat.id, 'Выбери предмет, к которому нужно добавить ссылку',
-                             reply_markup=settings_keyboard)
-            bot.register_next_step_handler(message, settings)
+            bot.send_message(message.chat.id,
+                             '''
+                             Введите ссылку в следующем формате:
+                             <pre>Ссылка|Формат</pre>
+                             ''',
+                             parse_mode='HTML',
+                             reply_markup=back_button_keyboard)
+            bot.register_next_step_handler(message, adding_link)
 
         elif message.text == add_hotline_button:
             bot.send_message(message.chat.id,
@@ -499,7 +504,26 @@ notification_thread.start()
 ########################################################################################################################                                                                 
 '''
 
-##############
+@bot.message_handler(content_types=['text'])
+def adding_link(message):
+    try:
+        if message.text == back_button:
+            bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
+            bot.register_next_step_handler(message, callback=settings)
+        else:
+            links = message.text.split('|')
+            if len(links) == 2:
+                db.add_links(message.chat.id, links[0], links[1])
+                bot.send_message(message.chat.id,
+                                 'Ссылка была успешно добавлена. Теперь её можно найти, нажав на кнопку \'Ссылки\' в главном меню 🙂',
+                                 reply_markup=settings_keyboard)
+                bot.register_next_step_handler(message, callback=settings)
+            else:
+                bot.send_message(message.chat.id, 'Неверный формат для занесения ссылки. Попробуйте еще..', reply_markup=back_button_keyboard)
+                bot.register_next_step_handler(message, callback=adding_link)
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_keyboard)
+        bot.register_next_step_handler(message, callback=settings)
 
 '''
 ########################################################################################################################

@@ -43,6 +43,13 @@ lesson_numbers = {
 
 subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
+def get_links(user_id):
+    links = db.get_links_by_id(user_id)
+    links_text = '\n'
+    for l in links:
+        links_text += 'ℹ️ ' + l[0] + ' — ' + l[1]
+
+    return links_text
 
 def get_hotlines(user_id):
     hotlines = db.get_hotline_by_id(user_id)

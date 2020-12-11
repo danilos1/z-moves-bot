@@ -93,6 +93,8 @@ def get_links_by_id(uid: int):
     c = conn.cursor()
     c.execute('SELECT link, description FROM links WHERE user_id = ?', (uid,))
 
+    return c.fetchall()
+
 def get_all_hotlines():
     conn = get_connection()
     c = conn.cursor()
