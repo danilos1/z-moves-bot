@@ -28,12 +28,16 @@ If you chosen "📝 Расписание " you will see this menu:
 ![Schedule menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-11_02-58-15.png)
 
 So, it is schedule menu. Here you will see many buttons which have self adventeges.
-* 📝 Расписание 
-* ⚙ Настройки
-* ℹ Инфо
-* ❓ Помощь
-* 🔗Ссылки
-* 👺 Хотлайны
+* 📝 Текущее расписание
+    * Schedule for today
+* 📝 Расписание на завтра
+    * Schedule for tomorrow
+* 📆 Расписание сессии
+    * Session schedule
+* 1️⃣ Неделя
+    * Here you will see schedule to all first week
+* 2️⃣ Неделя
+    * Here you will see schedule to all secound week
 
 
 If you chosen "⚙ Настройки" you will see this menu:
