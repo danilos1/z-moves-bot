@@ -44,7 +44,7 @@ So, it is schedule menu. Here you will see many buttons which have self adventeg
 
 If you chosen "⚙ Настройки" you will see this menu:
 
-![Setting menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_23-08-50.png)
+![Setting menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-11_03-06-03.png)
 
 And this menu you can chose several buttons:
 * 🔗 Добавить ссылку
