@@ -16,14 +16,12 @@ In the next question type your group:
 ![Main menu](https://github.com/danilos1/z-moves-bot/blob/main/Example_images/image_2020-12-10_20-31-38.png)
 
 You saw main menu. And now you choose any buttons:
-* 📆 Расписание сессии
-* 📝 Текущее расписание
-* 📝 Расписание на завтра
 * 📝 Расписание 
-    * Here you can find out schedule to any day of week. 
 * ⚙ Настройки
 * ℹ Инфо
 * ❓ Помощь
+*  Ссылки
+* Hotlines
 
 If you chosen "⚙ Настройки" you will see this menu:
 
