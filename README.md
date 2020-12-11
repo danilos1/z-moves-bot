@@ -34,7 +34,7 @@ The main menu is comprised of the following options:
 * 👺 Хотлайны
    * Here you will see your deadlines
 
-If you will choose "📝 Расписание " , you see the whole schedule options:
+If you choose "📝 Расписание " option, you see the whole schedule options:
 
 ![Schedule menu](https://github.com/danilos1/z-moves-bot/blob/main/img/image_2020-12-11_02-58-15.png)
 
@@ -47,7 +47,7 @@ So, it is a schedule menu. Here you will see many buttons which have self advent
 * 2️⃣ Неделя - here you will see a schedule for the second week
 * ⬅️Назад - just a back button to the main menu
 
-If you choose "⚙ Настройки" you see the following menu:
+If you choose "⚙ Настройки" you will see the following menu:
 
 ![Setting menu](https://github.com/danilos1/z-moves-bot/blob/main/img/image_2020-12-11_03-06-03.png)
 
