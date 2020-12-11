@@ -21,7 +21,9 @@ You saw main menu. And now you choose any buttons:
 * ℹ Инфо
 * ❓ Помощь
 * 🔗Ссылки
+   * Here you will see your links
 * 👺 Хотлайны
+   * Here you will see your deadlines
 
 If you chosen "📝 Расписание " you will see this menu:
 
@@ -38,7 +40,7 @@ So, it is schedule menu. Here you will see many buttons which have self adventeg
     * Here you will see schedule to all first week
 * 2️⃣ Неделя
     * Here you will see schedule to all secound week
-
+* ⬅️Назад
 
 If you chosen "⚙ Настройки" you will see this menu:
 
