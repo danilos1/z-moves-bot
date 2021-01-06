@@ -1,13 +1,15 @@
-import sqlite3
+import postgresql
+import psycopg2
+import os
 
 __connection = None
 
 
 def get_connection():
-    global __connection
-    if __connection is None:
-        __connection = sqlite3.connect('../z-moves.db', check_same_thread=False)
-    return __connection
+    global db
+    db = psycopg2.connect(dbname=os.environ['DB_NAME'], user=os.environ['DB_USERNAME'], password=os.environ['DB_PASSWORD'], host=os.environ['DB_HOST'], port=os.environ['DB_PORT'])
+    return db
+
 
 
 def init_db(force: bool = False):
@@ -15,7 +17,7 @@ def init_db(force: bool = False):
     c = conn.cursor()
 
     if force:
-        c.execute('DROP TABLE IF EXISTS users')
+        c.execute('DROP TABLE IF EXISTS users CASCADE ')
         c.execute('DROP TABLE IF EXISTS hotline')
         c.execute('DROP TABLE IF EXISTS links')
 
@@ -53,9 +55,10 @@ def add_user(user_id):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO users (user_id) VALUES (?)',
+        'INSERT INTO users (user_id) VALUES (%s)',
         (user_id,)
     )
+    conn.commit()
 
 def add_hotline(user_id: int, subject: str, task: str, deadline, link:str):
     conn = get_connection()
@@ -108,6 +111,3 @@ def get_all_users():
     c.execute('SELECT user_id FROM users')
 
     return c.fetchall()
-
-if __name__ == '__main__':
-    init_db()
