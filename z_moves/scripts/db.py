@@ -6,7 +6,7 @@ __connection = None
 def get_connection():
     global __connection
     if __connection is None:
-        __connection = sqlite3.connect('../hotline.db', check_same_thread=False)
+        __connection = sqlite3.connect('../z-moves.db', check_same_thread=False)
     return __connection
 
 
