@@ -7,7 +7,7 @@ current_day = date.today().weekday()
 week1_button = '1️⃣ Неделя ✅' if current_week == 1 else '1️⃣ Неделя'
 week2_button = '2️⃣ Неделя ✅' if current_week == 2 else '2️⃣ Неделя'
 
-student_button = '🎓 Студент'
+student_button = 'Студент'
 teacher_button = '🎓 Преподаватель'
 
 back_button = '⬅️Назад'
@@ -15,7 +15,9 @@ back_button = '⬅️Назад'
 add_link_button = '🔗 Добавить ссылку'
 links_button = '🔗 Ссылки'
 add_hotline_button = '👺 Добавить хотлайны'
+add_mail_button = 'ДОБАВИТЬ ПОЧТУ'
 hotlines_button = '👺 Хотлайны'
+mails_button = 'ПОЧТЫ'
 notifications_button = '🔕 Уведомления'
 change_group_role_button = '‍🔧 Изменить группу/роль'
 
