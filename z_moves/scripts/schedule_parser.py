@@ -56,6 +56,29 @@ def get_links(user_id):
 
     return links_text
 
+def get_user_role(user_id):
+    user_role = db.get_user_role_by_id(user_id)
+    user_role_text = ''
+    if len(user_role) == 0:
+        user_role_text = 'PUSTO'
+    else:
+        for l in user_role:
+            HL = '{user_role}'
+            user_role_text += HL.format(user_role=l[0])
+
+    return user_role_text
+
+def get_user_name(user_id):
+    user_name = db.get_user_name_by_id(user_id)
+    user_name_text = ''
+    if len(user_name) == 0:
+        user_name_text = 'PUSTO'
+    else:
+        for l in user_name:
+            HL = '{user_name}'
+            user_name_text += HL.format(user_name=l[0])
+
+    return user_name_text
 
 def get_mails(user_id):
     mails = db.get_mails_by_id(user_id)

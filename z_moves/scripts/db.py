@@ -17,7 +17,6 @@ def init_db(force: bool = True):
 
     if force:
         c.execute('DROP TABLE IF EXISTS users CASCADE')
-        c.execute('DROP TABLE IF EXISTS users_info')
         c.execute('DROP TABLE IF EXISTS hotline')
         c.execute('DROP TABLE IF EXISTS links')
         c.execute('DROP TABLE IF EXISTS mails')
@@ -133,12 +132,14 @@ def get_hotline_by_id(uid: int):
     return c.fetchall()
 
 
+
 def get_links_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT link, description FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchall()
+
 
 
 def get_mails_by_id(uid: int):
@@ -161,5 +162,23 @@ def get_all_users():
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT user_id FROM users')
+
+    return c.fetchall()
+
+
+
+
+def get_user_role_by_id(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT user_role FROM users WHERE user_id = %s', (uid,))
+
+    return c.fetchall()
+
+
+def get_user_name_by_id(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT user_name FROM users WHERE user_id = %s', (uid,))
 
     return c.fetchall()
