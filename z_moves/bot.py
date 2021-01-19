@@ -233,6 +233,13 @@ def main_menu(message):
                              reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
+        elif message.text == mails_button:
+            bot.send_message(message.chat.id, '————— 🔗 MAILS —————\n\n' + get_mails(message.chat.id),
+                             parse_mode='HTML',
+                             disable_web_page_preview=True,
+                             reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, callback=main_menu)
+
         elif message.text == hotlines_button:
             hotlines = '————— 👺 Hotlines —————\n\n' + get_hotlines(message.chat.id)
             bot.send_message(message.chat.id, hotlines,
@@ -248,6 +255,7 @@ def main_menu(message):
         elif message.text == help_button:
             bot.send_message(message.chat.id, help_message, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
+
 
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
@@ -616,9 +624,9 @@ def adding_mail(message):
             bot.register_next_step_handler(message, callback=settings)
 
         else:
-            mail = message.text.split('|')
-            if len(mail) == 2:
-                db.add_mail(message.chat.id, mail[0], mail[1])
+            mails = message.text.split('|')
+            if len(mails) == 2:
+                db.add_mails(message.chat.id, mails[0], mails[1])
                 bot.send_message(message.chat.id, 'почта добавлена успешно! заебись! чётка!', reply_markup=settings_keyboard)
                 bot.register_next_step_handler(message, callback=settings)
 

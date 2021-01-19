@@ -43,6 +43,7 @@ lesson_numbers = {
 
 subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
+
 def get_links(user_id):
     links = db.get_links_by_id(user_id)
     links_text = ''
@@ -55,6 +56,19 @@ def get_links(user_id):
 
     return links_text
 
+
+def get_mails(user_id):
+    mails = db.get_mails_by_id(user_id)
+    mails_text = ''
+    if len(mails) == 0:
+        mails_text = 'nema! :('
+    else:
+        for d in mails:
+            HL = 'ℹ️  <a href="{link}">{text}</a>\n'
+            mails_text += HL.format(link=d[0], text=d[1])
+
+    return mails_text
+
 def get_hotlines(user_id):
     hotlines = db.get_hotline_by_id(user_id)
     hotline_text = ''
@@ -66,6 +80,7 @@ def get_hotlines(user_id):
             hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + HL.format(link=h[3], text=' ℹ️')
 
     return hotline_text
+
 
 def get_current_week():
     weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
@@ -91,7 +106,6 @@ def show_exams(sch: str):
 {schedule}
 ———————————————
 '''.format(schedule=sch)
-
 
 
 class Schedule:

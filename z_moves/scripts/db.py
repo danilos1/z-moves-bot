@@ -30,7 +30,6 @@ def init_db(force: bool = True):
                 )
             ''')
 
-
     c.execute('''
         CREATE TABLE IF NOT EXISTS hotline (
             user_id     int,
@@ -75,6 +74,7 @@ def add_user(user_id, user_role: str, user_name: str):
     )
     conn.commit()
 
+
 def update_user(user_id, user_role: str, user_name: str):
     conn = get_connection()
     c = conn.cursor()
@@ -115,12 +115,13 @@ def add_links(user_id: int, link: str, description: str):
     conn.commit()
 
 
-def add_mail(user_id: int, link: str, description: str):
+def add_mails(user_id: int, link: str, description: str):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('INSERT INTO mails (user_id, link, description) VALUES (%s, %s, %s)',
-              (user_id, link, description,)
-              )
+    c.execute(
+        'INSERT INTO mails (user_id, link, description) VALUES (%s, %s, %s)',
+        (user_id, link, description,)
+    )
     conn.commit()
 
 
@@ -140,6 +141,14 @@ def get_links_by_id(uid: int):
     return c.fetchall()
 
 
+def get_mails_by_id(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT link, description FROM mails WHERE user_id =%s', (uid,))
+
+    return c.fetchall()
+
+
 def get_all_hotlines():
     conn = get_connection()
     c = conn.cursor()
@@ -154,5 +163,3 @@ def get_all_users():
     c.execute('SELECT user_id FROM users')
 
     return c.fetchall()
-
-
