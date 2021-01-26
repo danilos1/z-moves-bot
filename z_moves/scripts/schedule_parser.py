@@ -22,8 +22,7 @@ free = '''
 '''
 
 session_url = 'http://rozklad.kpi.ua/Schedules/ViewSessionSchedule.aspx?g='
-url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
-url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
+
 
 week_days = {
     1: 'понедельник',
@@ -56,6 +55,7 @@ def get_links(user_id):
 
     return links_text
 
+
 def get_user_role(user_id):
     user_role = db.get_user_role_by_id(user_id)
     user_role_text = ''
@@ -67,6 +67,7 @@ def get_user_role(user_id):
             user_role_text += HL.format(user_role=l[0])
 
     return user_role_text
+
 
 def get_user_name(user_id):
     user_name = db.get_user_name_by_id(user_id)
@@ -80,6 +81,7 @@ def get_user_name(user_id):
 
     return user_name_text
 
+
 def get_mails(user_id):
     mails = db.get_mails_by_id(user_id)
     mails_text = ''
@@ -91,6 +93,7 @@ def get_mails(user_id):
             mails_text += HL.format(link=d[0], text=d[1])
 
     return mails_text
+
 
 def get_hotlines(user_id):
     hotlines = db.get_hotline_by_id(user_id)
@@ -132,24 +135,27 @@ def show_exams(sch: str):
 
 
 class Schedule:
-    role: str
-    url: str
-    id: str
+    url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
+    url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
 
     @staticmethod
     def is_teacher_exist(name: str):
-        url = url_for_teachers_pattern
+        url = Schedule.url_for_teachers_pattern
         return requests.get(url.format(name)).ok
 
     @staticmethod
     def is_group_exist(group: str):
-        url = url_for_students_pattern
+        url = Schedule.url_for_students_pattern
         return requests.get(url.format(group)).ok
 
-    def get_schedule(self, week, day):
+    @staticmethod
+    def get_schedule(user_id, week, day):
         schedule = ''
-        if self.role == 'студент':
-            r = requests.get(self.url)
+        user = db.get_user_by_id(user_id)
+        role = user[1]
+        if role == 'студент':
+            url = Schedule.url_for_students_pattern
+            r = requests.get(url.format(user[2]))
             data = r.json()['data']
             for lesson in data:
                 if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
@@ -159,8 +165,9 @@ class Schedule:
                                 lesson["lesson_type"] + "</b> — " + \
                                 lesson["teacher_name"] + '\n'
 
-        elif self.role == 'преподаватель':
-            r = requests.get(self.url)
+        elif role == 'преподаватель':
+            url = Schedule.url_for_teachers_pattern
+            r = requests.get(url.format(user[2]))
             data = r.json()['data']
             for lesson in data:
                 if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
@@ -184,18 +191,7 @@ class Schedule:
         name = full_name.split(' ')
         return name[1] + ' ' + name[2]
 
-    def identify_as(self, role: str, id: str):
-        if role == 'студент':
-            self.url = url_for_students_pattern
-        elif role == 'преподаватель':
-            self.url = url_for_teachers_pattern
-        else:
-            raise AttributeError('Cannot identify your role')
-
-        self.id = id
-        self.url = self.url.format(id)
-        self.role = role
-
+    @staticmethod
     def get_session_for_schedule(self):
         full_url = session_url + sdb.session_tokens[self.id]
         req = requests.get(full_url)

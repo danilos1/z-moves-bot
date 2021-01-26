@@ -7,7 +7,7 @@ current_day = date.today().weekday()
 week1_button = '1️⃣ Неделя ✅' if current_week == 1 else '1️⃣ Неделя'
 week2_button = '2️⃣ Неделя ✅' if current_week == 2 else '2️⃣ Неделя'
 
-student_button = 'Студент'
+student_button = '🎓 Студент'
 teacher_button = '🎓 Преподаватель'
 
 back_button = '⬅️Назад'

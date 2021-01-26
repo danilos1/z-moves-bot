@@ -132,14 +132,12 @@ def get_hotline_by_id(uid: int):
     return c.fetchall()
 
 
-
 def get_links_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT link, description FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchall()
-
 
 
 def get_mails_by_id(uid: int):
@@ -165,20 +163,23 @@ def get_all_users():
 
     return c.fetchall()
 
+def get_user_by_id(uid: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM users WHERE user_id = %s', (uid,))
 
-
+    return c.fetchone()
 
 def get_user_role_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT user_role FROM users WHERE user_id = %s', (uid,))
 
-    return c.fetchall()
-
+    return c.fetchone()
 
 def get_user_name_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT user_name FROM users WHERE user_id = %s', (uid,))
 
-    return c.fetchall()
+    return c.fetchone()
