@@ -3,12 +3,9 @@ import datetime
 import telebot
 import os
 import re
-import schedule
-from z_moves.scripts.session_db import *
-from time import sleep
-from threading import Thread
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
+from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
@@ -474,23 +471,15 @@ def settings(message):
 ########################################################################################################################                                                                 
 '''
 
-is_notification_on = False
-
-
 @bot.message_handler(content_types=['text'])
 def set_notification(message):
-    global is_notification_on
     try:
-
         if re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
-            if not is_notification_on:
-                is_notification_on = True
-                schedule.every().day.at(message.text).do(lambda: send_notification(message))
-                bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_keyboard)
-                bot.register_next_step_handler(message, callback=settings)
-            else:
-                bot.send_message(message.chat.id, 'Время уже установлено', reply_markup=settings_keyboard)
-                bot.register_next_step_handler(message, callback=settings)
+            cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2])) # 12:23
+            db.add_notification(message.chat.id, cron_date)
+            send_notification(message.chat.id, cron_date)
+            bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_keyboard)
+            bot.register_next_step_handler(message, callback=settings)
 
         elif message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_keyboard)
@@ -504,21 +493,8 @@ def set_notification(message):
         bot.register_next_step_handler(message, callback=settings)
 
 
-def schedule_checker():
-    while True:
-        schedule.run_pending()
-        sleep(1)
-
-
-def send_notification(message):
-    bot.send_message(message.chat.id, show_day(message.chat.id, "Завтра", date.today().weekday() + 1),
-                     parse_mode="HTML")
-    global is_notification_on
-    is_notification_on = False
-
-
-notification_thread = Thread(target=schedule_checker)
-notification_thread.start()
+def send_notification(user_id: int, cron_date: str):
+    pass
 
 '''                                            
 ########################################################################################################################

@@ -20,6 +20,7 @@ def init_db(force: bool = True):
         c.execute('DROP TABLE IF EXISTS hotline')
         c.execute('DROP TABLE IF EXISTS links')
         c.execute('DROP TABLE IF EXISTS mails')
+        c.execute('DROP TABLE IF EXISTS notifications')
 
     c.execute('''
                 CREATE TABLE IF NOT EXISTS users (
@@ -60,6 +61,15 @@ def init_db(force: bool = True):
                 foreign key(user_id) references users(user_id)
             )
     ''')
+
+    c.execute('''
+                CREATE TABLE IF NOT EXISTS notifications (
+                    user_id     int,
+                    cron_date        text not null,
+
+                    foreign key(user_id) references users(user_id)
+                )
+        ''')
 
     conn.commit()
 
@@ -183,3 +193,12 @@ def get_user_name_by_id(uid: int):
     c.execute('SELECT user_name FROM users WHERE user_id = %s', (uid,))
 
     return c.fetchone()
+
+def add_notification(uid: str, cron_date: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO notifications (user_id, cron_date) VALUES (%s, %s)',
+        (uid, cron_date,)
+    )
+    conn.commit()
