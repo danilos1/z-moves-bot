@@ -42,3 +42,7 @@ back_button = '⬅️Назад'
 
 # reply of not available bot functions
 not_available_reply = '⛔ В разработке'
+
+# test button
+
+test_button = 'test'

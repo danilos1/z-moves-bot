@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-import z_moves.scripts.session_db as sdb
 import z_moves.scripts.db as db
 
 free = '''
@@ -100,14 +99,9 @@ def show_schedule(user_id, day: str, sch: str):
 ———————————————
 '''.format(schedule=sch, hotlines=hl)
 
+def show_link(user_id):
 
-def show_exams(sch: str):
-    return '''Запланированные мувы на экзамены: 
-———————————————
-{schedule}
-———————————————
-'''.format(schedule=sch)
-
+    return  ''.format()
 
 class Schedule:
     url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
@@ -141,30 +135,21 @@ class Schedule:
 
         return free if (schedule == '') else schedule
 
+
+    @staticmethod
+    def get_lessons_for_main_menu_links_reply_inline_buttons(user_id):
+        reply = ''
+        user = db.get_group_name_by_id(user_id)
+        url = Schedule.url_for_students_pattern
+        r = requests.get(url.format(user[0]))
+        data = r.json()['data']
+
+        for lesson in data:
+            reply += lesson["lesson_full_name"] + ' ' +  lesson['lesson_type'] + '\n'
+
+        return reply
+
     @staticmethod
     def get_teacher_name(full_name: str):
         name = full_name.split(' ')
         return name[1] + ' ' + name[2]
-
-    @staticmethod
-    def get_session_for_schedule(self):
-        full_url = session_url + sdb.session_tokens[self.id]
-        req = requests.get(full_url)
-        soup = BeautifulSoup(req.content, 'html.parser')
-
-        tr_s = []
-        rows = soup.find_all('tr')
-        schedule = ''
-        for row in rows:
-            tr_s.append(row.find_all('td'))
-
-        i = 0
-        for td in tr_s:
-            if td[1].getText():
-                schedule += '\n⚠️<b>' + td[0].getText() + '</b>\n' + subject_enumeration[i] + ' '
-                for link in td[1].find_all('a', href=True):
-                    schedule += '\n' + link.getText()
-                schedule += ' : ' + td[1].getText()[-5:] + '\n'
-                i += 1
-
-        return show_exams(schedule)

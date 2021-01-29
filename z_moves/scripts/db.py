@@ -24,9 +24,11 @@ def init_db(force: bool = True):
 
     c.execute('''
                 CREATE TABLE IF NOT EXISTS users (
-                    user_id       int  primary key,
-                    group_name    text,
-                    last_activity text 
+                    user_id             int  primary key,
+                    registration_date   text,
+                    user_name           text,
+                    group_name          text,
+                    last_activity       text 
                 )
             ''')
 
@@ -73,35 +75,38 @@ def init_db(force: bool = True):
 
     conn.commit()
 
+# working with users table
 
-def add_user(user_id, group_name: str):
+
+def users_register_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO users (user_id, group_name) VALUES (%s, %s)',
-        (user_id, group_name,)
+        'INSERT INTO users (user_id, registration_date, user_name, group_name, last_activity) VALUES (%s, %s, %s, %s, %s)',
+        (user_id, registration_date, user_name, group_name, last_activity,)
     )
     conn.commit()
 
 
-def update_user(user_id, group_name: str):
+def users_update_group_name(user_id, user_name: str, group_name: str, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'UPDATE users SET user_id = %s, group_name = %s',
-        (user_id, group_name,)
+        'UPDATE users SET user_name = %s, group_name = %s, last_activity = %s WHERE user_id = %s',
+        (user_id, user_name, group_name, last_activity,)
     )
     conn.commit()
 
 
-def update_last_activity(user_id, last_activity: str):
+def users_update_last_activity(user_id, user_name: str, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'UPDATE users SET last_activity = %s WHERE user_id = %s',
-        (user_id, last_activity,)
+        'UPDATE users SET user_name = %s, last_activity = %s WHERE user_id = %s',
+        (user_id, user_name, last_activity,)
     )
     conn.commit()
+
 
 def add_hotline_with_link(user_id: int, subject: str, task: str, deadline: str, link: str):
     conn = get_connection()

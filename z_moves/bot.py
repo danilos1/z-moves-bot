@@ -9,7 +9,6 @@ from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
 from crontab import CronTab
 
-
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
 
@@ -23,6 +22,9 @@ main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
+
+main_menu_links_reply_keyboard = telebot.types.InlineKeyboardMarkup()
+main_menu_links_reply_keyboard.add(test_button)
 
 # schedule menu keyboard
 schedule_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -63,8 +65,14 @@ REGISTRATION
 def start_message(message):
     try:
 
-        bot.send_message(message.chat.id, 'О, привет! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне'
-                                          'название своей группы.\n\nПример: <b>IO-83</b>', parse_mode='HTML')
+        user_first_name = message.from_user.first_name
+        user_last_name = ''
+        if message.from_user.last_name is not None:
+            user_last_name = ' ' + message.from_user.last_name
+
+        bot.send_message(message.chat.id, 'Привет, {}{}! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне'
+                                          'название своей группы.\n\nПример: <b>IO-83</b>'.
+                         format(user_first_name, user_last_name), parse_mode='HTML')
         bot.register_next_step_handler(message, callback=registration)
 
     except AttributeError:
@@ -77,10 +85,9 @@ def registration(message):
     try:
 
         if Schedule.is_group_exist(message.text):
-            db.add_user(message.chat.id, message.text.upper())
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
-                             reply_markup=main_menu_keyboard)
+            db.users_register_user(message.chat.id, time.strftime('%d/%m/%y, %X'), message.from_user.username,
+                                   message.text.upper(), time.strftime('%d/%m/%y, %X'))
+            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         else:
@@ -106,48 +113,49 @@ MAIN MENU
 '''
 
 
+
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-
     try:
 
         if message.text == schedule_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
                              reply_markup=schedule_menu_keyboard)
             bot.register_next_step_handler(message, callback=schedule_menu)
 
         elif message.text == settings_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Что ты желаешь настроить?', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == links_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, '————— 🔗 Links —————\n\n' + get_links(message.chat.id),
-                             parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
-            bot.register_next_step_handler(message, callback=main_menu)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
+            keyboard = telebot.types.InlineKeyboardMarkup()
+            url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
+            keyboard.add(url_button)
+            bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
 
         elif message.text == hotlines_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, '————— 👺 Hotlines —————\n\n' + get_hotlines(message.chat.id),
                              parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == mails_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, '————— 🔗 MAILS —————\n\n' + get_mails(message.chat.id),
                              parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == info_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, info_button_reply.format(db.get_group_name_by_id(message.chat.id)[0]),
                              parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == help_button:
-            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, help_button_reply, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
@@ -160,6 +168,12 @@ def main_menu(message):
         bot.register_next_step_handler(message, callback=main_menu)
 
 
+@bot.message_handler(content_types=['text'])
+def main_menu_links_reply(message):
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
+    keyboard.add(url_button)
+    bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
 '''                        
 ########################################################################################################################                    
 MAIN MENU END
@@ -572,14 +586,16 @@ def change_group_name(message):
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text.lower() == db.get_group_name_by_id(message.chat.id)[0].lower():
-            bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEB0mZgEfH5yOePEH_hLh0Op31xUEzkRwAC3QIAAhly1DQ5KcCTEWI3Ax4E')
+            bot.send_sticker(message.chat.id,
+                             'CAACAgIAAxkBAAEB0mZgEfH5yOePEH_hLh0Op31xUEzkRwAC3QIAAhly1DQ5KcCTEWI3Ax4E')
             bot.send_message(message.chat.id, 'Простите, но мне кажется Вы уже и так залогинены под группой'
                                               ' <b>{}</b> 🤨'.format(message.text),
                              parse_mode='HTML', reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=change_group_name)
 
         elif Schedule.is_group_exist(message.text):
-            db.update_user(message.chat.id, message.text.upper())
+            db.users_update_group_name(message.from_user.username, message.text.upper(), time.strftime('%d/%m/%y, %X'),
+                                       message.chat.id)
             bot.send_message(message.chat.id, 'Теперь Вы залогинены под группой <b>{}</b>.'.
                              format(db.get_group_name_by_id(message.chat.id)[0]),
                              parse_mode='HTML', reply_markup=main_menu_keyboard)
