@@ -24,9 +24,9 @@ def init_db(force: bool = True):
 
     c.execute('''
                 CREATE TABLE IF NOT EXISTS users (
-                    user_id     int  primary key,
-                    user_role   text,
-                    user_name   text
+                    user_id       int  primary key,
+                    group_name    text,
+                    last_activity text
                 )
             ''')
 
@@ -74,27 +74,36 @@ def init_db(force: bool = True):
     conn.commit()
 
 
-def add_user(user_id, user_role: str, user_name: str):
+def add_user(user_id, group_name: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO users (user_id, user_role, user_name) VALUES (%s, %s, %s)',
-        (user_id, user_role, user_name,)
+        'INSERT INTO users (user_id, group_name) VALUES (%s, %s)',
+        (user_id, group_name,)
     )
     conn.commit()
 
 
-def update_user(user_id, user_role: str, user_name: str):
+def update_user(user_id, group_name: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'UPDATE users SET user_id = %s, user_role = %s, user_name = %s',
-        (user_id, user_role, user_name,)
+        'UPDATE users SET user_id = %s, group_name = %s',
+        (user_id, group_name,)
     )
     conn.commit()
 
 
-def add_hotline(user_id: int, subject: str, task: str, deadline: str, link: str):
+def update_last_activity(user_id, last_activity: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'UPDATE users SET user_id = %s, last_activity =%s',
+        (user_id, last_activity,)
+    )
+    conn.commit()
+
+def add_hotline_with_link(user_id: int, subject: str, task: str, deadline: str, link: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
@@ -173,6 +182,7 @@ def get_all_users():
 
     return c.fetchall()
 
+
 def get_user_by_id(uid: str):
     conn = get_connection()
     c = conn.cursor()
@@ -180,19 +190,14 @@ def get_user_by_id(uid: str):
 
     return c.fetchone()
 
-def get_user_role_by_id(uid: int):
+
+def get_group_name_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT user_role FROM users WHERE user_id = %s', (uid,))
+    c.execute('SELECT group_name FROM users WHERE user_id = %s', (uid,))
 
     return c.fetchone()
 
-def get_user_name_by_id(uid: int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute('SELECT user_name FROM users WHERE user_id = %s', (uid,))
-
-    return c.fetchone()
 
 def add_notification(uid: str, cron_date: str):
     conn = get_connection()

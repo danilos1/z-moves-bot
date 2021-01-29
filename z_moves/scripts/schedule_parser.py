@@ -23,7 +23,6 @@ free = '''
 
 session_url = 'http://rozklad.kpi.ua/Schedules/ViewSessionSchedule.aspx?g='
 
-
 week_days = {
     1: 'понедельник',
     2: 'вторник',
@@ -50,36 +49,10 @@ def get_links(user_id):
         links_text = 'Вы еще не добавили ни одной ссылки.\nДля занесения ссылки перейдите в настройки ⚙'
     else:
         for l in links:
-            HL = 'ℹ️  <a href="{link}">{text}</a>\n'
-            links_text += HL.format(link=l[0], text=l[1])
+            hl = '1️⃣️  <a href="{link}">{text}</a>\n'
+            links_text += hl.format(link=l[0], text=l[1])
 
     return links_text
-
-
-def get_user_role(user_id):
-    user_role = db.get_user_role_by_id(user_id)
-    user_role_text = ''
-    if len(user_role) == 0:
-        user_role_text = 'PUSTO'
-    else:
-        for l in user_role:
-            HL = '{user_role}'
-            user_role_text += HL.format(user_role=l[0])
-
-    return user_role_text
-
-
-def get_user_name(user_id):
-    user_name = db.get_user_name_by_id(user_id)
-    user_name_text = ''
-    if len(user_name) == 0:
-        user_name_text = 'PUSTO'
-    else:
-        for l in user_name:
-            HL = '{user_name}'
-            user_name_text += HL.format(user_name=l[0])
-
-    return user_name_text
 
 
 def get_mails(user_id):
@@ -89,8 +62,8 @@ def get_mails(user_id):
         mails_text = 'nema! :('
     else:
         for d in mails:
-            HL = 'ℹ️  <a href="{link}">{text}</a>\n'
-            mails_text += HL.format(link=d[0], text=d[1])
+            hl = 'ℹ️  <a href="{link}">{text}</a>\n'
+            mails_text += hl.format(link=d[0], text=d[1])
 
     return mails_text
 
@@ -102,20 +75,22 @@ def get_hotlines(user_id):
         hotline_text = 'На текущий момент я не наблюдаю хотлайнов ☺️.\nДля занесения хотлайна перейдите в настройки ⚙'
     else:
         for h in hotlines:
-            HL = ' <a href="{link}">{text}</a>\n'
-            hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + HL.format(link=h[3], text=' ℹ️')
+            hl = ' <a href="{link}">{text}</a>\n'
+            hotline_text += h[0] + ' — ' + h[1] + ' — ' + h[2] + hl.format(link=h[3], text=' 1️⃣ ️')
 
     return hotline_text
 
 
 def get_current_week():
-    weekUrl = 'http://api.rozklad.org.ua/v2/weeks'
-    week = requests.get(weekUrl).json()['data']
+    week_url = 'http://api.rozklad.org.ua/v2/weeks'
+    week = requests.get(week_url).json()['data']
     return week
 
 
 def show_schedule(user_id, day: str, sch: str):
+
     hl = get_hotlines(user_id)
+
     return 'Запланированные мувы на ' + day + ':\n' + '''
 ———————————————
 {schedule}
@@ -151,38 +126,18 @@ class Schedule:
     @staticmethod
     def get_schedule(user_id, week, day):
         schedule = ''
-        user = db.get_user_by_id(user_id)
-        role = user[1]
-        if role == 'студент':
-            url = Schedule.url_for_students_pattern
-            r = requests.get(url.format(user[2]))
-            data = r.json()['data']
-            for lesson in data:
-                if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
-                    lessonStart = lesson["time_start"][:5]
-                    schedule += '\n' + str(lesson_numbers.get(lessonStart)) + ' ' + lessonStart + ' — <i>' + \
-                                lesson["lesson_name"] + '</i> <b>\n' + \
-                                lesson["lesson_type"] + "</b> — " + \
-                                lesson["teacher_name"] + '\n'
+        user = db.get_group_name_by_id(user_id)
+        url = Schedule.url_for_students_pattern
+        r = requests.get(url.format(user[0]))
+        data = r.json()['data']
 
-        elif role == 'преподаватель':
-            url = Schedule.url_for_teachers_pattern
-            r = requests.get(url.format(user[2]))
-            data = r.json()['data']
-            for lesson in data:
-                if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
-                    lessonStart = lesson["time_start"][:5]
-                    schedule += '\n' + str(lesson_numbers.get(lessonStart)) + ' ' + lessonStart + ' — <i>' + \
-                                lesson["lesson_name"] + '</i> \n<b>' + \
-                                lesson["lesson_type"] + "</b> — " + \
-                                lesson["teacher_name"] + '\n'
-
-                    group_list = []
-                    for group in lesson['groups']:
-                        group_list.append(group['group_full_name'])
-                    schedule += 'Груп' + ('а: ' if len(group_list) == 1 else 'и: ') + ', '.join(group_list) + '\n'
-        else:
-            schedule = 'Не удаётся вас распознать'
+        for lesson in data:
+            if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
+                lesson_start = lesson["time_start"][:5]
+                schedule += '\n' + str(lesson_numbers.get(lesson_start)) + ' ' + lesson_start + ' — <i>' + \
+                            lesson["lesson_name"] + '</i> <b>\n' + \
+                            lesson["lesson_type"] + "</b> — " + \
+                            lesson["teacher_name"] + '\n'
 
         return free if (schedule == '') else schedule
 
@@ -197,14 +152,14 @@ class Schedule:
         req = requests.get(full_url)
         soup = BeautifulSoup(req.content, 'html.parser')
 
-        trS = []
+        tr_s = []
         rows = soup.find_all('tr')
         schedule = ''
         for row in rows:
-            trS.append(row.find_all('td'))
+            tr_s.append(row.find_all('td'))
 
         i = 0
-        for td in trS:
+        for td in tr_s:
             if td[1].getText():
                 schedule += '\n⚠️<b>' + td[0].getText() + '</b>\n' + subject_enumeration[i] + ' '
                 for link in td[1].find_all('a', href=True):
