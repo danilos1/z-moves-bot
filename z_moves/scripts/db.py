@@ -26,7 +26,7 @@ def init_db(force: bool = True):
                 CREATE TABLE IF NOT EXISTS users (
                     user_id       int  primary key,
                     group_name    text,
-                    last_activity text
+                    last_activity text 
                 )
             ''')
 
@@ -98,7 +98,7 @@ def update_last_activity(user_id, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'UPDATE users SET user_id = %s, last_activity =%s',
+        'UPDATE users SET last_activity = %s WHERE user_id = %s',
         (user_id, last_activity,)
     )
     conn.commit()

@@ -78,7 +78,7 @@ def registration(message):
 
         if Schedule.is_group_exist(message.text):
             db.add_user(message.chat.id, message.text.upper())
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
                              reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
@@ -112,42 +112,42 @@ def main_menu(message):
     try:
 
         if message.text == schedule_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
                              reply_markup=schedule_menu_keyboard)
             bot.register_next_step_handler(message, callback=schedule_menu)
 
         elif message.text == settings_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Что ты желаешь настроить?', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == links_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, '————— 🔗 Links —————\n\n' + get_links(message.chat.id),
                              parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == hotlines_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, '————— 👺 Hotlines —————\n\n' + get_hotlines(message.chat.id),
                              parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == mails_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, '————— 🔗 MAILS —————\n\n' + get_mails(message.chat.id),
                              parse_mode='HTML', disable_web_page_preview=True, reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == info_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, info_button_reply.format(db.get_group_name_by_id(message.chat.id)[0]),
                              parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == help_button:
-            db.update_last_activity(message.chat.id, time.strftime('%x, %X'))
+            db.update_last_activity(time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, help_button_reply, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
