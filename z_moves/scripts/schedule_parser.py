@@ -87,7 +87,6 @@ def get_current_week():
 
 
 def show_schedule(user_id, day: str, sch: str):
-
     hl = get_hotlines(user_id)
 
     return 'Запланированные мувы на ' + day + ':\n' + '''
@@ -99,18 +98,9 @@ def show_schedule(user_id, day: str, sch: str):
 ———————————————
 '''.format(schedule=sch, hotlines=hl)
 
-def show_link(user_id):
-
-    return  ''.format()
 
 class Schedule:
     url_for_students_pattern = 'http://api.rozklad.org.ua/v2/groups/{0}/lessons'
-    url_for_teachers_pattern = 'http://api.rozklad.org.ua/v2/teachers/{0}/lessons'
-
-    @staticmethod
-    def is_teacher_exist(name: str):
-        url = Schedule.url_for_teachers_pattern
-        return requests.get(url.format(name)).ok
 
     @staticmethod
     def is_group_exist(group: str):
@@ -135,21 +125,15 @@ class Schedule:
 
         return free if (schedule == '') else schedule
 
-
     @staticmethod
-    def get_lessons_for_main_menu_links_reply_inline_buttons(user_id):
-        reply = ''
+    def get_lessons(user_id):
+        reply = []
         user = db.get_group_name_by_id(user_id)
         url = Schedule.url_for_students_pattern
         r = requests.get(url.format(user[0]))
         data = r.json()['data']
 
         for lesson in data:
-            reply += lesson["lesson_full_name"] + ' ' +  lesson['lesson_type'] + '\n'
+            reply.append(lesson["lesson_full_name"])
 
-        return reply
-
-    @staticmethod
-    def get_teacher_name(full_name: str):
-        name = full_name.split(' ')
-        return name[1] + ' ' + name[2]
+        return set(reply)

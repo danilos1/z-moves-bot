@@ -22,6 +22,7 @@ main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
+main_menu_keyboard.add(test_button)
 
 main_menu_links_reply_keyboard = telebot.types.InlineKeyboardMarkup()
 main_menu_links_reply_keyboard.add(test_button)
@@ -112,13 +113,23 @@ MAIN MENU
 ########################################################################################################################                                                       
 '''
 
-
-
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-    try:
 
-        if message.text == schedule_button:
+    try:
+        if message.text == test_button:
+            subjects = Schedule.get_lessons(message.chat.id)
+            inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+            for subject in subjects:
+                inline_subjects_keyboard.keyboard.add(
+                    telebot.types.InlineKeyboardButton(text=subject, url="https://mastergroosha.github.io/telegram-tutorial/docs/lesson_08/")
+                )
+
+            bot.send_message(message.chat.id, str(Schedule.get_lessons(message.chat.id)), reply_markup=inline_subjects_keyboard)
+            bot.register_next_step_handler(message, callback=main_menu)
+
+        elif message.text == schedule_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
                              reply_markup=schedule_menu_keyboard)
@@ -203,7 +214,6 @@ def show_day(user_id: int, wd: str, day: int):
 @bot.message_handler(content_types=['text'])
 def schedule_menu(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
@@ -407,7 +417,6 @@ LINK FUNCTION
 @bot.message_handler(content_types=['text'])
 def add_link(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
