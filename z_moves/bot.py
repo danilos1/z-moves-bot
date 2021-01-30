@@ -1,13 +1,12 @@
 import datetime
-
-import telebot
 import os
-import re
+# import re
 import time
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
-from crontab import CronTab
+
+# from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
@@ -17,15 +16,29 @@ db.init_db()
 KEYBOARD SECTION
 ########################################################################################################################                               
 '''
+
+
 # main menu
-main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
 main_menu_keyboard.add(test_button)
 
-main_menu_links_reply_keyboard = telebot.types.InlineKeyboardMarkup()
-main_menu_links_reply_keyboard.add(test_button)
+link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+link_inline_keyboard.add(links_inline_add_button)
+link_inline_keyboard.add(links_inline_change_button)
+link_inline_keyboard.add(links_inline_remove_button)
+
+links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button)
+links_subject_type_inline_keyboard.add(inline_step_back_button)
+
+
+test_keyboard = telebot.types.InlineKeyboardMarkup()
+test_keyboard.add(test_button)
 
 # schedule menu keyboard
 schedule_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -71,7 +84,7 @@ def start_message(message):
         if message.from_user.last_name is not None:
             user_last_name = ' ' + message.from_user.last_name
 
-        bot.send_message(message.chat.id, 'Привет, {}{}! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне'
+        bot.send_message(message.chat.id, 'Привет, {}{}! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне '
                                           'название своей группы.\n\nПример: <b>IO-83</b>'.
                          format(user_first_name, user_last_name), parse_mode='HTML')
         bot.register_next_step_handler(message, callback=registration)
@@ -81,7 +94,6 @@ def start_message(message):
         bot.register_next_step_handler(message, callback=start_message)
 
 
-@bot.message_handler(content_types=['text'])
 def registration(message):
     try:
 
@@ -89,12 +101,25 @@ def registration(message):
             db.users_register_user(message.chat.id, time.strftime('%d/%m/%y, %X'), message.from_user.username,
                                    message.text.upper(), time.strftime('%d/%m/%y, %X'))
             bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
-            bot.register_next_step_handler(message, callback=main_menu)
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Что-то я о такой группе ещё не слышал 🤥'
                                               'Попробуй ещё.'.format(message.text), parse_mode='HTML')
             bot.register_next_step_handler(message, callback=registration)
+
+        list_subjects = list(Schedule.get_lessons(message.chat.id))
+        len_list_subjects = len(Schedule.get_lessons(message.chat.id))
+        len_subjects = 0
+        for subject in list_subjects:
+            len_subjects += 1
+            if len_subjects < len_list_subjects + 1:
+                links_inline_subjects_keyboard.add(
+                    telebot.types.InlineKeyboardButton(text=subject,
+                                                       callback_data='subject_{0}_{1}'.format(message.chat.id, len_subjects)))
+
+        links_inline_subjects_keyboard.add(inline_back_button)
+
+
 
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
@@ -113,23 +138,12 @@ MAIN MENU
 ########################################################################################################################                                                       
 '''
 
+
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-
     try:
-        if message.text == test_button:
-            subjects = Schedule.get_lessons(message.chat.id)
-            inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
 
-            for subject in subjects:
-                inline_subjects_keyboard.keyboard.add(
-                    telebot.types.InlineKeyboardButton(text=subject, url="https://mastergroosha.github.io/telegram-tutorial/docs/lesson_08/")
-                )
-
-            bot.send_message(message.chat.id, str(Schedule.get_lessons(message.chat.id)), reply_markup=inline_subjects_keyboard)
-            bot.register_next_step_handler(message, callback=main_menu)
-
-        elif message.text == schedule_button:
+        if message.text == schedule_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
                              reply_markup=schedule_menu_keyboard)
@@ -142,10 +156,7 @@ def main_menu(message):
 
         elif message.text == links_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            keyboard = telebot.types.InlineKeyboardMarkup()
-            url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
-            keyboard.add(url_button)
-            bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
+            bot.send_message(message.chat.id, 'ahuet', reply_markup=link_inline_keyboard)
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -170,6 +181,11 @@ def main_menu(message):
             bot.send_message(message.chat.id, help_button_reply, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
+        elif message.text == test_button:
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
+            bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, main_menu)
+
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
@@ -179,12 +195,39 @@ def main_menu(message):
         bot.register_next_step_handler(message, callback=main_menu)
 
 
+@bot.callback_query_handler(func=lambda call: True)
+def test_inline_reply(call):
+
+    if call.data == 'back_button':
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
+
+    elif call.data == 'add_link':
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard)
+
+    elif call.data == 'step_back_button':
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard)
+
+    elif call.data == 'subject_{0}_{1}'.format(call.message.chat.id, 1):
+        bot.send_message(call.message.chat.id, call.data)
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
+
+    elif call.data == 'subject_{0}_{1}'.format(call.message.chat.id, 2):
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
+
+    elif call.data == 'labwork' or 'lecture' or 'practice':
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'А теперь скинь мне ссылочку, а дальше я всё сделаю сам :)', reply_markup=None)
+        bot.register_next_step_handler(call.message, callback=adlink)
+
+
+
 @bot.message_handler(content_types=['text'])
-def main_menu_links_reply(message):
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
-    keyboard.add(url_button)
-    bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
+def adlink(message):
+    bot.send_message(message.chat.id, 'Дело сделано!', reply_markup=main_menu_keyboard)
+    bot.register_next_step_handler(message, main_menu)
+
+
 '''                        
 ########################################################################################################################                    
 MAIN MENU END
@@ -552,12 +595,12 @@ def set_notification(message):
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
-        elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
-            cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
-            db.add_notification(message.chat.id, cron_date)
-            send_notification(message.chat.id, cron_date)
-            bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_menu_keyboard)
-            bot.register_next_step_handler(message, callback=settings_menu)
+        # elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
+        #     cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
+        #     db.add_notification(message.chat.id, cron_date)
+        #     send_notification(message.chat.id, cron_date)
+        #     bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_menu_keyboard)
+        #     bot.register_next_step_handler(message, callback=settings_menu)
 
         else:
             bot.send_message(message.chat.id, 'Немножечко не по формату :(', reply_markup=back_button_keyboard)
@@ -568,8 +611,8 @@ def set_notification(message):
         bot.register_next_step_handler(message, callback=set_notification)
 
 
-def send_notification(user_id: int, cron_date: str):
-    pass
+# def send_notification(user_id: int, cron_date: str):
+#   pass
 
 
 '''                                            
