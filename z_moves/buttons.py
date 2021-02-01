@@ -14,13 +14,16 @@ mails_button = '✉️ Почты'
 info_button = 'ℹ️Инфо'
 help_button = '❓ Помощь'
 
+
 links_inline_add_button = telebot.types.InlineKeyboardButton(text='Добавить ссылку', callback_data='add_link')
 links_inline_change_button = telebot.types.InlineKeyboardButton(text='Изменить ссылку', callback_data='change_link')
 links_inline_remove_button = telebot.types.InlineKeyboardButton(text='Удалить ссылку', callback_data='remove_link')
 
-links_inline_lec_button = telebot.types.InlineKeyboardButton(text='Лек', callback_data='labwork')
-links_inline_lab_button = telebot.types.InlineKeyboardButton(text='Лаб', callback_data='lecture')
-links_inline_practice_button = telebot.types.InlineKeyboardButton(text='Прак', callback_data='practice')
+links_inline_lec_button = telebot.types.InlineKeyboardButton(text='Лекция', callback_data='Лек')
+links_inline_lab_button = telebot.types.InlineKeyboardButton(text='Лаба', callback_data='Лаб')
+links_inline_practice_button = telebot.types.InlineKeyboardButton(text='Практика', callback_data='Прак')
+
+links_inline_ready_button = telebot.types.InlineKeyboardButton(text='Готово', callback_data='ready_button')
 
 # main menu instant replies
 info_button_reply = '<b>Z-Moves Bot</b>\n\nВы авторизованы под группой: <b>{0}</b>'
