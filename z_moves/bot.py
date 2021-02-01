@@ -216,22 +216,82 @@ def test_inline_reply(call):
         subject_var = w_dict.get(call.data)
 
     elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
-        bot.edit_message_text(text='Отправь ссылочку и альденте :)'.format(subject_var, call.data), chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML')
-
-        bot.register_next_step_handler(call.message, input_link)
-
         subject_type_var = call.data
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        global link_redact_keyboard
+        link_redact_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        link_redact_keyboard.add('Добавить ссылку', 'Добавить пароль')
+        link_redact_keyboard.add('Отмена', 'Далее')
+        bot.send_message(call.message.chat.id, 'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nВыберите следующее действие :)'.format(subject_var, subject_type_var), reply_markup=link_redact_keyboard, parse_mode='HTML')
+
+        bot.register_next_step_handler(call.message, input_link_menu)
+
 
     elif call.data == 'step_back_button':
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard)
 
 
 @bot.message_handler(content_types=['text'])
-def input_link(message):
-    global subject_var, subject_type_var
-    bot.send_message(message.chat.id, 'Вы прикрепили ссылочку ({}) на <b>{}</b>. занятие по предмету <b>{}</b>. Ссылка будет отображаться в расписании под данным предметом :)'.format(message.text, subject_type_var.lower(), subject_var[0:subject_var.find('.')]), parse_mode='HTML', disable_web_page_preview=True)
-    bot.delete_message(chat_id=message.chat.id, message_id=message.message_id-1)
+def input_link_menu(message):
+    global subject_var, subject_type_var, subject_link_var, subject_password_var
+    #bot.send_message(message.chat.id, 'Вы прикрепили ссылочку ({}) на <b>{}</b>. занятие по предмету <b>{}</b>. Ссылка будет отображаться в расписании под данным предметом :)'.format(message.text, subject_type_var.lower(), subject_var), parse_mode='HTML', disable_web_page_preview=True)
 
+    if message.text == 'Добавить ссылку':
+        add_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        add_link_keyboard.add('Готово', back_button)
+        bot.send_message(message.chat.id, 'отправьте мне ссылку на пару', reply_markup=add_link_keyboard)
+        bot.register_next_step_handler(message, input_link)
+
+    elif message.text == 'Добавить пароль':
+        add_link_password_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        add_link_password_keyboard.add('Готово', back_button)
+        bot.send_message(message.chat.id, 'отправьте мне пароль к ссылке, если он присутствует', reply_markup=add_link_password_keyboard)
+        bot.register_next_step_handler(message, input_link_pass)
+
+    elif message.text == 'Отмена':
+        bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(message, main_menu)
+
+    elif message.text == 'Далее':
+        bot.send_message(message.chat.id, 'Поздравляю. Вы создали ссылокчку :)')
+        bot.register_next_step_handler(message, main_menu)
+
+    else:
+        bot.send_message(message.chat.id, 'клас')
+        bot.register_next_step_handler(message, input_link_menu)
+
+
+def input_link(message):
+    global link_redact_keyboardlink_redact_keyboard, subject_var, subject_type_var, subject_link_var
+
+    if message.text == back_button:
+        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    elif message.text == 'Готово':
+        bot.send_message(message.chat.id, 'Если нужно, тык на добавить пароль, иначе готово', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    else:
+        subject_link_var = message.text
+        bot.send_message(message.chat.id, 'Предмет: {} - {}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var))
+        bot.register_next_step_handler(message, input_link)
+
+
+def input_link_pass(message):
+    if message.text == back_button:
+        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    elif message.text == 'Готово':
+        bot.send_message(message.chat.id, 'тык далее', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    else:
+        subject_password_var = message.text
+        bot.send_message(message.chat.id,
+                         'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var))
+        bot.register_next_step_handler(message, input_link)
 
 '''                        
 ########################################################################################################################                    
@@ -672,8 +732,6 @@ def change_group_name(message):
                 w.append(subject)
                 w_dict[subject[:15]] = subject
 
-                print(w)
-                print(w_dict)
 
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
