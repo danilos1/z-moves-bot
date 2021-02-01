@@ -30,12 +30,12 @@ link_inline_keyboard.add(links_inline_add_button)
 link_inline_keyboard.add(links_inline_change_button)
 link_inline_keyboard.add(links_inline_remove_button)
 
-
-
 links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
 links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button)
 links_subject_type_inline_keyboard.add(inline_step_back_button)
 
+links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
+links_inline_ready_keyboard.add(links_inline_ready_button)
 
 test_keyboard = telebot.types.InlineKeyboardMarkup()
 test_keyboard.add(test_button)
@@ -102,29 +102,29 @@ def registration(message):
                                    message.text.upper(), time.strftime('%d/%m/%y, %X'))
             bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
 
-            global links_inline_subjects_keyboard
+            global links_inline_subjects_keyboard, w, w_dict
             links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+            w = []
+            w_dict = {}
 
             list_subjects = list(Schedule.get_lessons(message.chat.id))
             len_list_subjects = len(Schedule.get_lessons(message.chat.id))
             len_subjects = 0
             for subject in list_subjects:
                 len_subjects += 1
+                w.append(subject)
+                w_dict[subject[:15]] = subject
+
+
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
-                        telebot.types.InlineKeyboardButton(text=subject,
-                                                           callback_data='subject_{0}_{1}'.format(message.chat.id,
-                                                                                                  len_subjects)))
-
+                        telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Что-то я о такой группе ещё не слышал 🤥'
                                               'Попробуй ещё.'.format(message.text), parse_mode='HTML')
             bot.register_next_step_handler(message, callback=registration)
-
-
-
-
 
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
@@ -143,6 +143,7 @@ MAIN MENU
 ########################################################################################################################                                                       
 '''
 
+
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
     try:
@@ -160,7 +161,7 @@ def main_menu(message):
 
         elif message.text == links_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, 'ahuet', reply_markup=link_inline_keyboard)
+            bot.send_message(message.chat.id, 'Тыкай крч кнопку', reply_markup=link_inline_keyboard)
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -185,20 +186,13 @@ def main_menu(message):
             bot.send_message(message.chat.id, help_button_reply, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
-
-
         elif message.text == test_button:
-
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, 'fak me', reply_markup=links_inline_subjects_keyboard)
-
-
-
-
+            bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
 
         else:
-            bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
-            bot.register_next_step_handler(message, callback=__name__)
+            bot.send_message(message.chat.id, '<b>{}</b>???? моя. твоя. не понимать.'.format(message.text), reply_markup=main_menu_keyboard, parse_mode='HTML')
+            bot.register_next_step_handler(message, callback=main_menu)
 
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
@@ -207,28 +201,36 @@ def main_menu(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def test_inline_reply(call):
+    global subject_var, subject_type_var
 
+    if call.data == 'add_link':
+        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id,
+                              message_id=call.message.message_id, parse_mode='HTML')
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                      reply_markup=links_inline_subjects_keyboard)
 
-    if call.data == 'back_button':
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
+    elif call.data in w_dict.keys():
+        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML')
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
 
+        subject_var = w_dict.get(call.data)
 
+    elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
+        bot.edit_message_text(text='Отправь ссылочку и альденте :)'.format(subject_var, call.data), chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML')
+
+        bot.register_next_step_handler(call.message, input_link)
+
+        subject_type_var = call.data
 
     elif call.data == 'step_back_button':
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard)
 
-    elif call.data == 'subject_{0}_{1}'.format(call.message.chat.id, 1):
-        bot.send_message(call.message.chat.id, call.data)
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
 
-    elif call.data == 'subject_{0}_{1}'.format(call.message.chat.id, 2):
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
-
-    elif call.data == 'labwork' or 'lecture' or 'practice':
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'А теперь скинь мне ссылочку, а дальше я всё сделаю сам :)', reply_markup=None)
-        bot.register_next_step_handler(call.message, callback=add_link)
+@bot.message_handler(content_types=['text'])
+def input_link(message):
+    global subject_var, subject_type_var
+    bot.send_message(message.chat.id, 'Вы прикрепили ссылочку ({}) на <b>{}</b>. занятие по предмету <b>{}</b>. Ссылка будет отображаться в расписании под данным предметом :)'.format(message.text, subject_type_var.lower(), subject_var[0:subject_var.find('.')]), parse_mode='HTML', disable_web_page_preview=True)
+    bot.delete_message(chat_id=message.chat.id, message_id=message.message_id-1)
 
 
 '''                        
@@ -656,19 +658,26 @@ def change_group_name(message):
                              parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
-            global links_inline_subjects_keyboard
+            global links_inline_subjects_keyboard, w, w_dict
             links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+            w = []
+            w_dict = {}
 
             list_subjects = list(Schedule.get_lessons(message.chat.id))
             len_list_subjects = len(Schedule.get_lessons(message.chat.id))
             len_subjects = 0
             for subject in list_subjects:
                 len_subjects += 1
+                w.append(subject)
+                w_dict[subject[:15]] = subject
+
+                print(w)
+                print(w_dict)
+
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
-                        telebot.types.InlineKeyboardButton(text=subject,
-                                                           callback_data='subject_{0}_{1}'.format(message.chat.id,
-                                                                                                  len_subjects)))
+                        telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Я о такой группе пока-что не слышал. Попробуй ещё раз.'
