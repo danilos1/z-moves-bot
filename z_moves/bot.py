@@ -5,7 +5,7 @@ import time
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
-
+import random
 # from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
@@ -19,23 +19,22 @@ KEYBOARD SECTION
 
 
 # main menu
-main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+
+main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
 main_menu_keyboard.add(test_button)
 
-link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
-link_inline_keyboard.add(links_inline_add_button)
-link_inline_keyboard.add(links_inline_change_button)
-link_inline_keyboard.add(links_inline_remove_button)
 
-links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
-links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button)
-links_subject_type_inline_keyboard.add(inline_step_back_button)
 
 links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
 links_inline_ready_keyboard.add(links_inline_ready_button)
+
+
+links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button, links_inline_practice_button)
+links_subject_type_inline_keyboard.add(telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'))
 
 test_keyboard = telebot.types.InlineKeyboardMarkup()
 test_keyboard.add(test_button)
@@ -120,6 +119,9 @@ def registration(message):
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
                         telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
+            links_inline_subjects_keyboard.add(
+                 telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'), in_main_menu_inline_button)
+
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Что-то я о такой группе ещё не слышал 🤥'
@@ -144,10 +146,9 @@ MAIN MENU
 '''
 
 
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(func=lambda message: True)
 def main_menu(message):
     try:
-
         if message.text == schedule_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
@@ -160,8 +161,13 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == links_button:
+            global link_inline_keyboard
+            link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+            link_inline_keyboard.add(links_inline_add_button)
+            link_inline_keyboard.add(in_main_menu_inline_button)
+
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, 'Тыкай крч кнопку', reply_markup=link_inline_keyboard)
+            bot.send_message(message.chat.id, 'В этом меню ты можешь добавлять ссылки на конференции, а по нужде и пароли к ним.', reply_markup=link_inline_keyboard)
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -195,25 +201,31 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=main_menu)
 
     except AttributeError:
-        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
+
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=None )
         bot.register_next_step_handler(message, callback=main_menu)
+
+
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def test_inline_reply(call):
-    global subject_var, subject_type_var
+    global subject_var, subject_type_var, link_inline_keyboard
 
     if call.data == 'add_link':
         bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id,
-                              message_id=call.message.message_id, parse_mode='HTML')
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      reply_markup=links_inline_subjects_keyboard)
+                              message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
 
     elif call.data in w_dict.keys():
-        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML')
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard)
-
+        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard, parse_mode='HTML')
         subject_var = w_dict.get(call.data)
+
+    elif call.data == 'first_back_button':
+        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=link_inline_keyboard, parse_mode='HTML')
+
+    elif call.data == 'second_back_button':
+        bot.edit_message_text(text='Выбери чёта', chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
 
     elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
         subject_type_var = call.data
@@ -226,9 +238,10 @@ def test_inline_reply(call):
 
         bot.register_next_step_handler(call.message, input_link_menu)
 
-
-    elif call.data == 'step_back_button':
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard)
+    elif call.data == 'main_menu':
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id, 'main menu', reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(call.message, main_menu)
 
 
 @bot.message_handler(content_types=['text'])
@@ -253,7 +266,7 @@ def input_link_menu(message):
         bot.register_next_step_handler(message, main_menu)
 
     elif message.text == 'Далее':
-        bot.send_message(message.chat.id, 'Поздравляю. Вы создали ссылокчку :)')
+        bot.send_message(message.chat.id, 'Поздравляю. Вы создали ссылочку для: \n{} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=main_menu_keyboard)
         bot.register_next_step_handler(message, main_menu)
 
     else:
@@ -279,6 +292,7 @@ def input_link(message):
 
 
 def input_link_pass(message):
+    global subject_link_var, subject_password_var
     if message.text == back_button:
         bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
         bot.register_next_step_handler(message, input_link_menu)
@@ -288,10 +302,12 @@ def input_link_pass(message):
         bot.register_next_step_handler(message, input_link_menu)
 
     else:
+
         subject_password_var = message.text
         bot.send_message(message.chat.id,
                          'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var))
-        bot.register_next_step_handler(message, input_link)
+        bot.register_next_step_handler(message, input_link_pass)
+
 
 '''                        
 ########################################################################################################################                    
@@ -736,6 +752,10 @@ def change_group_name(message):
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
                         telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
+
+            links_inline_subjects_keyboard.add(
+                telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'),
+                in_main_menu_inline_button)
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Я о такой группе пока-что не слышал. Попробуй ещё раз.'

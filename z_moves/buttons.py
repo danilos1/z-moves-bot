@@ -19,6 +19,9 @@ links_inline_add_button = telebot.types.InlineKeyboardButton(text='Добави�
 links_inline_change_button = telebot.types.InlineKeyboardButton(text='Изменить ссылку', callback_data='change_link')
 links_inline_remove_button = telebot.types.InlineKeyboardButton(text='Удалить ссылку', callback_data='remove_link')
 
+in_main_menu_inline_button = telebot.types.InlineKeyboardButton(text='Главное меню', callback_data='main_menu')
+
+
 links_inline_lec_button = telebot.types.InlineKeyboardButton(text='Лекция', callback_data='Лек')
 links_inline_lab_button = telebot.types.InlineKeyboardButton(text='Лаба', callback_data='Лаб')
 links_inline_practice_button = telebot.types.InlineKeyboardButton(text='Практика', callback_data='Прак')
@@ -51,7 +54,7 @@ change_group_name_button = '‍🔧 Изменить группу'
 
 # global back button
 back_button = '⬅️Назад'
-inline_back_button = telebot.types.InlineKeyboardButton(text='Назад', callback_data='back_button')
+inline_in_main_menu_button = telebot.types.InlineKeyboardButton(text='В главное меню', callback_data='main_menu')
 inline_step_back_button = telebot.types.InlineKeyboardButton(text='Назад', callback_data='step_back_button')
 
 # reply of not available bot functions
