@@ -6,8 +6,13 @@ __connection = None
 
 def get_connection():
     global db
-    db = psycopg2.connect(dbname=os.environ['DB_NAME'], user=os.environ['DB_USERNAME'],
-                          password=os.environ['DB_PASSWORD'], host=os.environ['DB_HOST'], port=os.environ['DB_PORT'])
+    db = psycopg2.connect(
+        dbname=os.environ['DB_NAME'],
+        user=os.environ['DB_USERNAME'],
+        password=os.environ['DB_PASSWORD'],
+        host=os.environ['DB_HOST'],
+        port=os.environ['DB_PORT']
+    )
     return db
 
 
@@ -56,6 +61,18 @@ def init_db(force: bool = True):
         )
     ''')
 
+    c.execute('''
+            CREATE TABLE IF NOT EXISTS links (
+                user_id      int,
+                subject      text not null,
+                subject_type text not null,
+                link         text not null,
+                password     text,
+                description  text,
+
+                foreign key(user_id) references users(user_id)
+            )
+        ''')
 
     c.execute('''
             CREATE TABLE IF NOT EXISTS mails (
@@ -180,7 +197,7 @@ def get_hotline_by_id(uid: int):
 def get_links_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT link, description FROM links WHERE user_id = %s', (uid,))
+    c.execute('SELECT subject, subject_type, link, password, description FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchall()
 

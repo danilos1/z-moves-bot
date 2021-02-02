@@ -41,6 +41,14 @@ lesson_numbers = {
 subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
 
+def show_exams(sch: str):
+    return '''Запланированные мувы на экзамены: 	
+———————————————	
+{schedule}	
+———————————————	
+'''.format(schedule=sch)
+
+
 def get_links(user_id):
     links = db.get_links_by_id(user_id)
     links_text = ''
@@ -71,7 +79,7 @@ def get_hotlines(user_id):
     hotlines = db.get_hotline_by_id(user_id)
     hotline_text = ''
     if len(hotlines) == 0:
-        hotline_text = 'На текущий момент я не наблюдаю хотлайнов ☺️.\nДля занесения хотлайна перейдите в настройки ⚙'
+        hotline_text = 'На текущий момент я не наблюдаю хотлайнов ☺️\nДля занесения хотлайна перейдите в настройки ⚙'
     else:
         for h in hotlines:
             hl = ' <a href="{link}">{text}</a>\n'
@@ -86,17 +94,29 @@ def get_current_week():
     return week
 
 
-def show_schedule(user_id, day: str, sch: str):
-    hl = get_hotlines(user_id)
+def show_day(user_id: int, wd: str, day: int):
+    if day > 5:
+        s = wd + ' пар нету. Отдыхаем'
+    else:
+        weekday = week_days[day]
+        cur_week = get_current_week()
+        s = Schedule.show_schedule(user_id, cur_week, day, weekday)
 
-    return 'Запланированные мувы на ' + day + ':\n' + '''
-———————————————
-{schedule}
-———————————————
-👺 Hotlines: 
-{hotlines}
-———————————————
-'''.format(schedule=sch, hotlines=hl)
+    return s
+
+
+class Subject:
+    lesson_title: str
+    lesson_type: str
+    teacher_name: str
+
+    def __init__(self, lesson_title, lesson_type, teacher_name):
+        self.lesson_title = lesson_title
+        self.lesson_type = lesson_type
+        self.teacher_name = teacher_name
+
+    def __str__(self):
+        return self.lesson_title + '[' + self.lesson_type + "] - " + self.teacher_name + '\n'
 
 
 class Schedule:
@@ -108,8 +128,56 @@ class Schedule:
         return requests.get(url.format(group)).ok
 
     @staticmethod
-    def get_schedule(user_id, week, day):
-        schedule = ''
+    def show_schedule(user_id, week, day, weekday):
+        user = db.get_group_name_by_id(user_id)
+        url = Schedule.url_for_students_pattern
+        r = requests.get(url.format(user[0]))
+        data = r.json()['data']
+
+        schedule_title = 'Запланированные мувы на ' + weekday + ':'
+        schedule_body = ''
+
+        subject_links = db.get_links_by_id(user_id)
+        for lesson in data:
+            if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
+                lesson_start = lesson["time_start"][:5]
+                lesson_name = lesson["lesson_name"]
+                lesson_type = lesson["lesson_type"]
+                schedule_body += '\n' + str(lesson_numbers.get(lesson_start)) + ' ' + lesson_start + ' — <i>' + \
+                                 lesson_name + '</i> <b>\n' + \
+                                 lesson_type + "</b> — " + \
+                                 lesson["teacher_name"] + '\n'
+
+                for s in subject_links:
+                    if s[0] == lesson_name and s[1] == lesson_type:
+                        subject_link = '\t<u>Ссылка на конференцию:</u> {0}\n'.format(s[2])
+                        if s[3] is not None:
+                            subject_link += "\tКод доступа: <code>{0}</code>\n".format(s[3])
+
+                        if s[4] is not None:
+                            subject_link += '\tℹ️{0}\n'.format(s[4])
+
+                        schedule_body += subject_link
+
+
+        if schedule_body == '':
+            schedule_body = free
+
+        hl = get_hotlines(user_id)
+
+        return '''
+{title}
+———————————————
+{schedule}
+———————————————
+👺 Hotlines: 
+{hotlines}
+———————————————
+            '''.format(title=schedule_title, schedule=schedule_body, hotlines=hl)
+
+    @staticmethod
+    def get_list_of_subjects(user_id, week, day):
+        subjects = []
         user = db.get_group_name_by_id(user_id)
         url = Schedule.url_for_students_pattern
         r = requests.get(url.format(user[0]))
@@ -117,13 +185,10 @@ class Schedule:
 
         for lesson in data:
             if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
-                lesson_start = lesson["time_start"][:5]
-                schedule += '\n' + str(lesson_numbers.get(lesson_start)) + ' ' + lesson_start + ' — <i>' + \
-                            lesson["lesson_name"] + '</i> <b>\n' + \
-                            lesson["lesson_type"] + "</b> — " + \
-                            lesson["teacher_name"] + '\n'
+                subject = Subject(lesson["lesson_name"], lesson["lesson_type"], lesson["teacher_name"])
+                subjects.append(subject)
 
-        return free if (schedule == '') else schedule
+        return subjects
 
     @staticmethod
     def get_lessons(user_id):
@@ -137,3 +202,34 @@ class Schedule:
             reply.append(lesson["lesson_full_name"])
 
         return set(reply)
+
+    @staticmethod
+    def get_session_for_schedule(user_id):
+        user = db.get_group_name_by_id(user_id)
+        url = 'http://api.rozklad.org.ua/v2/groups/{0}'
+        r = requests.get(url.format(user[0]))
+        data = r.json()['data']
+
+        group_token = data["group_url"][data["group_url"].index("g="):]
+        full_url = 'http://rozklad.kpi.ua/Schedules/ViewSessionSchedule.aspx?' + group_token
+
+        req = requests.get(full_url)
+
+        soup = BeautifulSoup(req.content, 'html.parser')
+
+        trs = []
+        rows = soup.find_all('tr')
+        schedule = ''
+        for row in rows:
+            trs.append(row.find_all('td'))
+
+        i = 0
+        for td in trs:
+            if td[1].getText():
+                schedule += '\n⚠️<b>' + td[0].getText() + '</b>\n' + subject_enumeration[i] + ' '
+                for link in td[1].find_all('a', href=True):
+                    schedule += '\n' + link.getText()
+                schedule += ' : ' + td[1].getText()[-5:] + '\n'
+                i += 1
+
+        return show_exams(schedule)
