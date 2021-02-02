@@ -6,7 +6,7 @@ import re
 import time
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
-from z_moves.scripts import db
+from z_moves.scripts import db, links
 from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
@@ -70,7 +70,6 @@ REGISTRATION
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
-
         user_first_name = message.from_user.first_name
         user_last_name = ''
         if message.from_user.last_name is not None:
@@ -120,18 +119,11 @@ MAIN MENU
 
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
-
     try:
         if message.text == test_button:
-            subjects = Schedule.get_lessons(message.chat.id)
-            inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
-
-            for subject in subjects:
-                inline_subjects_keyboard.keyboard.add(
-                    telebot.types.InlineKeyboardButton(text=subject, url="https://mastergroosha.github.io/telegram-tutorial/docs/lesson_08/")
-                )
-
-            bot.send_message(message.chat.id, str(Schedule.get_lessons(message.chat.id)), reply_markup=inline_subjects_keyboard)
+            bot.send_message(message.chat.id,
+                             links.get_links(message.chat.id),
+                             reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
         elif message.text == schedule_button:
@@ -202,20 +194,6 @@ SCHEDULE MENU
 ########################################################################################################################                                                  
 '''
 
-
-def show_day(user_id: int, wd: str, day: int):
-    if day > 5:
-
-        s = wd + ' пар нету. Отдыхаем'
-
-    else:
-        weekday = week_days[day]
-        cur_week = get_current_week()
-        s = show_schedule(user_id, weekday, Schedule.get_schedule(user_id, cur_week, day))
-
-    return s
-
-
 @bot.message_handler(content_types=['text'])
 def schedule_menu(message):
     try:
@@ -256,36 +234,32 @@ def week_1(message):
     try:
 
         if message.text == week1_day_buttons[0]:
-            bot.send_message(message.chat.id, show_schedule(message.chat.id, "понедельник",
-                                                            Schedule.get_schedule(message.chat.id, 1, 1)),
+            bot.send_message(message.chat.id, Schedule.show_schedule(message.chat.id, 1, 1, "понедельник"),
                              parse_mode="HTML", reply_markup=week1_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
 
         elif message.text == week1_day_buttons[1]:
-            bot.send_message(message.chat.id, show_schedule(message.chat.id, "вторник",
-                                                            Schedule.get_schedule(message.chat.id, 1, 2)),
+            bot.send_message(message.chat.id, Schedule.show_schedule(message.chat.id, 1, 2, "вторник"),
                              parse_mode="HTML", reply_markup=week1_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
 
         elif message.text == week1_day_buttons[2]:
-            bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "среду", Schedule.get_schedule(message.chat.id, 1, 3)),
+            bot.send_message(message.chat.id, Schedule.show_schedule(message.chat.id, 1, 3, "среду"),
                              parse_mode="HTML", reply_markup=week1_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
 
         elif message.text == week1_day_buttons[3]:
             bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "четверг", Schedule.get_schedule(message.chat.id, 1, 4)),
+                             Schedule.show_schedule(message.chat.id, 1, 4, "четверг"),
                              parse_mode="HTML",
                              reply_markup=week1_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
 
         elif message.text == week1_day_buttons[4]:
-            bot.send_message(message.chat.id, show_schedule(message.chat.id, "пятницу",
-                                                            Schedule.get_schedule(message.chat.id, 1, 5)),
+            bot.send_message(message.chat.id,
+                             Schedule.show_schedule(message.chat.id, 1, 5, "пятницу"),
                              parse_mode="HTML",
-                             reply_markup=week1_day_choose_keyboard
-                             )
+                             reply_markup=week1_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_1)
 
         elif message.text == back_button:
@@ -306,32 +280,32 @@ def week_2(message):
     try:
 
         if message.text == week2_day_buttons[0]:
-            bot.send_message(message.chat.id, show_schedule(message.chat.id, "понедельник",
-                                                            Schedule.get_schedule(message.chat.id, 2, 1)),
+            bot.send_message(message.chat.id,
+                             Schedule.show_schedule(message.chat.id, 2, 1, "понедельник"),
                              parse_mode="HTML", reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
         elif message.text == week2_day_buttons[1]:
             bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "вторник", Schedule.get_schedule(message.chat.id, 2, 2)),
+                             Schedule.show_schedule(message.chat.id, 2, 2, "вторник"),
                              parse_mode="HTML", reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
         elif message.text == week2_day_buttons[2]:
             bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "среду", Schedule.get_schedule(message.chat.id, 2, 3)),
+                             Schedule.show_schedule(message.chat.id, 2, 3, "среду"),
                              parse_mode="HTML", reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
         elif message.text == week2_day_buttons[3]:
             bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "четверг", Schedule.get_schedule(message.chat.id, 2, 4)),
+                             Schedule.show_schedule(message.chat.id, 2, 4, "четверг"),
                              parse_mode="HTML", reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
         elif message.text == week2_day_buttons[4]:
             bot.send_message(message.chat.id,
-                             show_schedule(message.chat.id, "пятницу", Schedule.get_schedule(message.chat.id, 2, 5)),
+                             Schedule.show_schedule(message.chat.id, 2, 5, "пятницу"),
                              parse_mode="HTML", reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
