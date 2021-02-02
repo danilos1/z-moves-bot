@@ -19,13 +19,14 @@ KEYBOARD SECTION
 '''
 
 
-# main menu
+# main menu keyboard
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
 main_menu_keyboard.add(test_button)
 
+# inline link keyboard
 link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
 link_inline_keyboard.add(links_inline_add_button)
 link_inline_keyboard.add(links_inline_change_button)
@@ -38,6 +39,7 @@ links_subject_type_inline_keyboard.add(inline_step_back_button)
 links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
 links_inline_ready_keyboard.add(links_inline_ready_button)
 
+# test keyboard
 test_keyboard = telebot.types.InlineKeyboardMarkup()
 test_keyboard.add(test_button)
 
@@ -58,6 +60,12 @@ settings_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 settings_menu_keyboard.add(add_link_button, add_hotline_button, add_mail_button)
 settings_menu_keyboard.add(notification_button, change_group_name_button)
 settings_menu_keyboard.add(back_button)
+
+# inline notification keyboard
+inline_notification_keyboard = telebot.types.InlineKeyboardMarkup()
+inline_notification_keyboard.add(inline_add_notification)
+inline_notification_keyboard.add(inline_change_notification)
+inline_notification_keyboard.add(inline_remove_notification)
 
 # global back button keyboard
 back_button_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -491,20 +499,22 @@ def settings_menu(message):
             bot.register_next_step_handler(message, callback=add_hotline)
 
         elif message.text == notification_button:
-            current_notification = db.get_notification_by_userid(message.chat.id)
-            if current_notification is not None:
-                bot.send_message(message.chat.id,
-                                 'Я заметил, что ты уже установил время уведомления на <b>' + current_notification[1] +
-                                 "</b>. Чтобы обновить, введи новое время в формате HH:MM(в 24-часовом формате): ",
-                                 parse_mode='HTML',
-                                 reply_markup=back_button_keyboard)
-            else:
-                bot.send_message(message.chat.id,
-                                 'Введите время в формате <b>HH:mm</b> (24-часовом формате), на которое '
-                                 'мне следует установить уведомления:',
-                                 parse_mode='HTML',
-                                 reply_markup=back_button_keyboard)
-            bot.register_next_step_handler(message, callback=set_notification)
+            bot.send_message(message.chat.id, 'Выбери интересующую тебя опцию', reply_markup=inline_notification_keyboard)
+            # current_notification = db.get_notification_by_userid(message.chat.id)
+            # if current_notification is not None:
+            #     bot.send_message(message.chat.id,
+            #                      'Я заметил, что ты уже установил время уведомления на <b>' + current_notification[1] +
+            #                      "</b>. Чтобы обновить, введи новое время в формате HH:MM(в 24-часовом формате): ",
+            #                      parse_mode='HTML',
+            #                      reply_markup=back_button_keyboard)
+            # else:
+            #     bot.send_message(message.chat.id,
+            #                      'Введите время в формате <b>HH:mm</b> (24-часовом формате), на которое '
+            #                      'мне следует установить уведомления:',
+            #                      parse_mode='HTML',
+            #                      reply_markup=back_button_keyboard)
+            # bot.register_next_step_handler(message, callback=set_notification)
+            bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == change_group_name_button:
             bot.send_message(message.chat.id, 'Введи название новой группы.\n'

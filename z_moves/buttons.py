@@ -49,7 +49,12 @@ add_mail_button = '✉️ Добавить почту'
 notification_button = '🔕 Уведомления'
 change_group_name_button = '‍🔧 Изменить группу'
 
-# global back button
+# notification buttons
+inline_add_notification = telebot.types.InlineKeyboardButton(text='Добавить уведомление', callback_data='add_notification')
+inline_change_notification = telebot.types.InlineKeyboardButton(text='Изменить уведомление', callback_data='change_notification')
+inline_remove_notification = telebot.types.InlineKeyboardButton(text='Удалить уведомление', callback_data='remove_notification')
+
+# global back buttons
 back_button = '⬅️Назад'
 inline_back_button = telebot.types.InlineKeyboardButton(text='Назад', callback_data='back_button')
 inline_step_back_button = telebot.types.InlineKeyboardButton(text='Назад', callback_data='step_back_button')
