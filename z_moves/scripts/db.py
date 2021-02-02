@@ -38,12 +38,12 @@ def init_db(force: bool = True):
             ''')
 
     c.execute('''
-                CREATE TABLE IF NOT EXISTS links (
-                    user_id         int,
-                    link            text,
-                    link_password   text,
-                    lesson_name     text,
-                    lesson_type     text,
+                CREATE TABLE IF NOT EXISTS hotline (
+                    user_id     int,
+                    subject     text not null,
+                    task        text not null,
+                    deadline    text not null,
+                    link        text,
                     
                     foreign key(user_id) references users(user_id)
                 )
@@ -95,12 +95,13 @@ def init_db(force: bool = True):
 
     conn.commit()
 
+
 def insert_link(user_id, link, link_password, lesson_name, lesson_type):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
         'INSERT INTO links (user_id, link, link_password, lesson_name, lesson_type) VALUES (%s, %s, %s, %s, %s)',
-        (user_id,link, link_password, lesson_name, lesson_type,)
+        (user_id, link, link_password, lesson_name, lesson_type,)
     )
     conn.commit()
 
@@ -156,12 +157,13 @@ def add_hotline_without_link(user_id: int, subject: str, task: str, deadline: st
     conn.commit()
 
 
-def add_links(user_id: int, link: str, description: str):
+def add_links(user_id: int, subject, subject_type, link, password='', description=''):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO links (user_id, link, description) VALUES (%s, %s, %s)',
-        (user_id, link, description,)
+        'INSERT INTO links (user_id, subject, subject_type, link, password, description) '
+        'VALUES (%s, %s, %s, %s, %s, %s)',
+        (user_id, subject, subject_type, link, password, description,)
     )
     conn.commit()
 
@@ -208,6 +210,7 @@ def get_lesson_number(uid: int):
     c.execute('SELECT lesson_number FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchone()
+
 
 def get_mails_by_id(uid: int):
     conn = get_connection()

@@ -208,8 +208,6 @@ def main_menu(message):
         bot.register_next_step_handler(message, callback=main_menu)
 
 
-
-
 @bot.callback_query_handler(func=lambda call: True)
 def test_inline_reply(call):
     global subject_var, subject_type_var, link_inline_keyboard
@@ -467,7 +465,6 @@ SETTINGS MENU
 @bot.message_handler(content_types=['text'])
 def settings_menu(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
@@ -531,9 +528,7 @@ def add_link(message):
 
         else:
             links = message.text.split('|')
-
             if len(links) == 2:
-                db.add_links(message.chat.id, links[0], links[1])
                 bot.send_message(message.chat.id,
                                  'Ссылка была успешно добавлена. Теперь её можно найти, нажав на кнопку'
                                  ' \'Ссылки\' в главном меню 🙂', reply_markup=settings_menu_keyboard)
