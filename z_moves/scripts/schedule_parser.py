@@ -137,9 +137,6 @@ class Schedule:
         schedule_title = 'Запланированные мувы на ' + weekday + ':'
         schedule_body = ''
 
-        # https://us04web.zoom.us/j/78636823674?pwd=RkdMcDdpdUpWa3NrTitCaVRQc1AyQT09
-        # Идентификатор конференции: 786 3682 3674
-        # Код доступа: 9gj0dZ
         subject_links = db.get_links_by_id(user_id)
         for lesson in data:
             if lesson['lesson_week'] == str(week) and lesson['day_number'] == str(day):
@@ -153,11 +150,15 @@ class Schedule:
 
                 for s in subject_links:
                     if s[0] == lesson_name and s[1] == lesson_type:
-                        subject_link = s[2] + '\n'
+                        subject_link = '\t<u>Ссылка на конференцию:</u> {0}\n'.format(s[2])
                         if s[3] is not None:
-                            subject_link += "Код доступа: {0}\n".format(s[3])
+                            subject_link += "\tКод доступа: <code>{0}</code>\n".format(s[3])
+
+                        if s[4] is not None:
+                            subject_link += '\tℹ️{0}\n'.format(s[4])
 
                         schedule_body += subject_link
+
 
         if schedule_body == '':
             schedule_body = free
