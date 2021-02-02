@@ -69,8 +69,8 @@ def init_db(force: bool = True):
 
     c.execute('''
                 CREATE TABLE IF NOT EXISTS notifications (
-                    user_id     int,
-                    cron_date        text not null,
+                    user_id     int unique,
+                    notification_time   text not null,
 
                     foreign key(user_id) references users(user_id)
                 )
@@ -83,7 +83,7 @@ def insert_link(user_id, link, link_password, lesson_name, lesson_type):
     c = conn.cursor()
     c.execute(
         'INSERT INTO links (user_id, link, link_password, lesson_name, lesson_type) VALUES (%s, %s, %s, %s, %s)',
-        (user_id,link, link_password, lesson_name, lesson_type,)
+        (user_id, link, link_password, lesson_name, lesson_type,)
     )
     conn.commit()
 
@@ -232,11 +232,41 @@ def get_group_name_by_id(uid: int):
     return c.fetchone()
 
 
-def add_notification(uid: str, cron_date: str):
+def add_notification(uid: str, time: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO notifications (user_id, cron_date) VALUES (%s, %s)',
-        (uid, cron_date,)
+        'INSERT INTO notifications (user_id, notification_time) VALUES (%s, %s)',
+        (uid, time,)
     )
     conn.commit()
+
+def update_notification(uid: str, time: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'UPDATE notifications SET notification_time = %s WHERE user_id = %s',
+        (time, uid)
+    )
+    conn.commit()
+
+def get_notifications():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM notifications')
+
+    return c.fetchall()
+
+def get_notification_by_userid(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM notifications WHERE user_id=%s', (uid,))
+
+    return c.fetchone()
+
+def get_count_of_notification_by_userid(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT COUNT(*) FROM notifications WHERE user_id = %s', (uid,))
+
+    return c.fetchone()[0]

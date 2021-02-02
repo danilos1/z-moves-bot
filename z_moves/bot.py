@@ -1,12 +1,13 @@
 import datetime
 import os
-# import re
 import time
+import threading
+import re
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
+import schedule
 
-# from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
@@ -484,14 +485,26 @@ def settings_menu(message):
 
         elif message.text == add_hotline_button:
             bot.send_message(message.chat.id,
-                             'Для добавления хотлайна, тебе стоит прописать дедлайн в слудующем формате:\n\n'
+                             'Для добавления хотлайна, тебе стоит прописать дедлайн в следующем формате:\n\n'
                              '<pre>Название предмета, Описание работы, Срок выполнения, Ссылка(опционально)</pre>',
                              parse_mode='HTML', reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=add_hotline)
 
         elif message.text == notification_button:
-            bot.send_message(message.chat.id, not_available_reply, reply_markup=settings_menu_keyboard)
-            bot.register_next_step_handler(message, callback=settings_menu)
+            current_notification = db.get_notification_by_userid(message.chat.id)
+            if current_notification is not None:
+                bot.send_message(message.chat.id,
+                                 'Я заметил, что ты уже установил время уведомления на <b>' + current_notification[1] +
+                                 "</b>. Чтобы обновить, введи новое время в формате HH:MM(в 24-часовом формате): ",
+                                 parse_mode='HTML',
+                                 reply_markup=back_button_keyboard)
+            else:
+                bot.send_message(message.chat.id,
+                                 'Введите время в формате <b>HH:mm</b> (24-часовом формате), на которое '
+                                 'мне следует установить уведомления:',
+                                 parse_mode='HTML',
+                                 reply_markup=back_button_keyboard)
+            bot.register_next_step_handler(message, callback=set_notification)
 
         elif message.text == change_group_name_button:
             bot.send_message(message.chat.id, 'Введи название новой группы.\n'
@@ -655,17 +668,28 @@ NOTIFICATION FUNCTION
 @bot.message_handler(content_types=['text'])
 def set_notification(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
-        # elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
-        #     cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
-        #     db.add_notification(message.chat.id, cron_date)
-        #     send_notification(message.chat.id, cron_date)
-        #     bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_menu_keyboard)
-        #     bot.register_next_step_handler(message, callback=settings_menu)
+        elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
+            current_notification = db.get_notification_by_userid(message.chat.id)
+            if current_notification is not None:
+                db.update_notification(message.chat.id, message.text)
+                bot.send_message(message.chat.id,
+                                 'Время обновлено! Теперь каждый день в <b>' + message.text +
+                                 "</b> будет приходить уведомление о грядущем расписании (на следующий день)",
+                                 parse_mode='HTML',
+                                 reply_markup=settings_menu_keyboard)
+            else:
+                db.add_notification(message.chat.id, message.text)
+                bot.send_message(message.chat.id,
+                                 'Время установлено! Теперь каждый день в <b>' + message.text +
+                                 "</b> будет приходить уведомление о грядущем расписании (на следующий день)",
+                                 parse_mode='HTML',
+                                 reply_markup=settings_menu_keyboard)
+
+            bot.register_next_step_handler(message, callback=settings_menu)
 
         else:
             bot.send_message(message.chat.id, 'Немножечко не по формату :(', reply_markup=back_button_keyboard)
@@ -755,5 +779,25 @@ GROUP NAME CHANGE END
 ########################################################################################################################                                                                 
 '''
 
+def job():
+    notifications = db.get_notifications()
+    for n in notifications:
+        if datetime.datetime.now().strftime("%H:%M") == n[1]:
+            notify(n[0])
+
+def notify(uid: int):
+    tomorrow = (date.today() + datetime.timedelta(days=1)).weekday() + 1
+    bot.send_message(uid,  show_day(uid, "Завтра", tomorrow), parse_mode='HTML')
+
+
+def notification_checker():
+    while True:
+        schedule.run_pending()
+
+
 if __name__ == '__main__':
+    schedule_thread = threading.Thread(target=notification_checker)
+    schedule_thread.start()
+    schedule.every().minute.do(job)
+
     bot.polling()
