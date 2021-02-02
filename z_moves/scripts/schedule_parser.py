@@ -41,6 +41,14 @@ lesson_numbers = {
 subject_enumeration = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
 
+def show_exams(sch: str):
+    return '''Запланированные мувы на экзамены: 	
+———————————————	
+{schedule}	
+———————————————	
+'''.format(schedule=sch)
+
+
 def get_links(user_id):
     links = db.get_links_by_id(user_id)
     links_text = ''
@@ -137,3 +145,34 @@ class Schedule:
             reply.append(lesson["lesson_full_name"])
 
         return set(reply)
+
+    @staticmethod
+    def get_session_for_schedule(user_id):
+        user = db.get_group_name_by_id(user_id)
+        url = 'http://api.rozklad.org.ua/v2/groups/{0}'
+        r = requests.get(url.format(user[0]))
+        data = r.json()['data']
+
+        group_token = data["group_url"][data["group_url"].index("g="):]
+        full_url = 'http://rozklad.kpi.ua/Schedules/ViewSessionSchedule.aspx?'+group_token
+
+        req = requests.get(full_url)
+
+        soup = BeautifulSoup(req.content, 'html.parser')
+
+        trs = []
+        rows = soup.find_all('tr')
+        schedule = ''
+        for row in rows:
+            trs.append(row.find_all('td'))
+
+        i = 0
+        for td in trs:
+            if td[1].getText():
+                schedule += '\n⚠️<b>' + td[0].getText() + '</b>\n' + subject_enumeration[i] + ' '
+                for link in td[1].find_all('a', href=True):
+                    schedule += '\n' + link.getText()
+                schedule += ' : ' + td[1].getText()[-5:] + '\n'
+                i += 1
+
+        return show_exams(schedule)
