@@ -1,13 +1,12 @@
 import datetime
-
-import telebot
 import os
-import re
+# import re
 import time
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
-from crontab import CronTab
+import random
+# from crontab import CronTab
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
@@ -17,15 +16,28 @@ db.init_db()
 KEYBOARD SECTION
 ########################################################################################################################                               
 '''
+
+
 # main menu
+
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
 main_menu_keyboard.add(test_button)
 
-main_menu_links_reply_keyboard = telebot.types.InlineKeyboardMarkup()
-main_menu_links_reply_keyboard.add(test_button)
+
+
+links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
+links_inline_ready_keyboard.add(links_inline_ready_button)
+
+
+links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button, links_inline_practice_button)
+links_subject_type_inline_keyboard.add(telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'))
+
+test_keyboard = telebot.types.InlineKeyboardMarkup()
+test_keyboard.add(test_button)
 
 # schedule menu keyboard
 schedule_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
@@ -71,7 +83,7 @@ def start_message(message):
         if message.from_user.last_name is not None:
             user_last_name = ' ' + message.from_user.last_name
 
-        bot.send_message(message.chat.id, 'Привет, {}{}! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне'
+        bot.send_message(message.chat.id, 'Привет, {}{}! 🥴🤙\nZ-Moves на связи 😎\n\nДля работы со мной напиши мне '
                                           'название своей группы.\n\nПример: <b>IO-83</b>'.
                          format(user_first_name, user_last_name), parse_mode='HTML')
         bot.register_next_step_handler(message, callback=registration)
@@ -81,7 +93,6 @@ def start_message(message):
         bot.register_next_step_handler(message, callback=start_message)
 
 
-@bot.message_handler(content_types=['text'])
 def registration(message):
     try:
 
@@ -89,7 +100,28 @@ def registration(message):
             db.users_register_user(message.chat.id, time.strftime('%d/%m/%y, %X'), message.from_user.username,
                                    message.text.upper(), time.strftime('%d/%m/%y, %X'))
             bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
-            bot.register_next_step_handler(message, callback=main_menu)
+
+            global links_inline_subjects_keyboard, w, w_dict
+            links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+            w = []
+            w_dict = {}
+
+            list_subjects = list(Schedule.get_lessons(message.chat.id))
+            len_list_subjects = len(Schedule.get_lessons(message.chat.id))
+            len_subjects = 0
+            for subject in list_subjects:
+                len_subjects += 1
+                w.append(subject)
+                w_dict[subject[:15]] = subject
+
+
+                if len_subjects < len_list_subjects + 1:
+                    links_inline_subjects_keyboard.add(
+                        telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
+            links_inline_subjects_keyboard.add(
+                 telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'), in_main_menu_inline_button)
+
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Что-то я о такой группе ещё не слышал 🤥'
@@ -113,23 +145,11 @@ MAIN MENU
 ########################################################################################################################                                                       
 '''
 
-@bot.message_handler(content_types=['text'])
+
+@bot.message_handler(func=lambda message: True)
 def main_menu(message):
-
     try:
-        if message.text == test_button:
-            subjects = Schedule.get_lessons(message.chat.id)
-            inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
-
-            for subject in subjects:
-                inline_subjects_keyboard.keyboard.add(
-                    telebot.types.InlineKeyboardButton(text=subject, url="https://mastergroosha.github.io/telegram-tutorial/docs/lesson_08/")
-                )
-
-            bot.send_message(message.chat.id, str(Schedule.get_lessons(message.chat.id)), reply_markup=inline_subjects_keyboard)
-            bot.register_next_step_handler(message, callback=main_menu)
-
-        elif message.text == schedule_button:
+        if message.text == schedule_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
                              reply_markup=schedule_menu_keyboard)
@@ -141,11 +161,13 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == links_button:
+            global link_inline_keyboard
+            link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
+            link_inline_keyboard.add(links_inline_add_button)
+            link_inline_keyboard.add(in_main_menu_inline_button)
+
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            keyboard = telebot.types.InlineKeyboardMarkup()
-            url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
-            keyboard.add(url_button)
-            bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
+            bot.send_message(message.chat.id, 'В этом меню ты можешь добавлять ссылки на конференции, а по нужде и пароли к ним.', reply_markup=link_inline_keyboard)
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -170,21 +192,123 @@ def main_menu(message):
             bot.send_message(message.chat.id, help_button_reply, parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
+        elif message.text == test_button:
+            db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
+            bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
+
         else:
-            bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
+            bot.send_message(message.chat.id, '<b>{}</b>???? моя. твоя. не понимать.'.format(message.text), reply_markup=main_menu_keyboard, parse_mode='HTML')
             bot.register_next_step_handler(message, callback=main_menu)
 
     except AttributeError:
-        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=main_menu_keyboard)
+
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=None )
         bot.register_next_step_handler(message, callback=main_menu)
 
 
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def test_inline_reply(call):
+    global subject_var, subject_type_var, link_inline_keyboard
+
+    if call.data == 'add_link':
+        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id,
+                              message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
+
+    elif call.data in w_dict.keys():
+        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard, parse_mode='HTML')
+        subject_var = w_dict.get(call.data)
+
+    elif call.data == 'first_back_button':
+        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=link_inline_keyboard, parse_mode='HTML')
+
+    elif call.data == 'second_back_button':
+        bot.edit_message_text(text='Выбери чёта', chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
+
+    elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
+        subject_type_var = call.data
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        global link_redact_keyboard
+        link_redact_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        link_redact_keyboard.add('Добавить ссылку', 'Добавить пароль')
+        link_redact_keyboard.add('Отмена', 'Далее')
+        bot.send_message(call.message.chat.id, 'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nВыберите следующее действие :)'.format(subject_var, subject_type_var), reply_markup=link_redact_keyboard, parse_mode='HTML')
+
+        bot.register_next_step_handler(call.message, input_link_menu)
+
+    elif call.data == 'main_menu':
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id, 'main menu', reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(call.message, main_menu)
+
+
 @bot.message_handler(content_types=['text'])
-def main_menu_links_reply(message):
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    url_button = telebot.types.InlineKeyboardButton(text="Перейти на Яндекс", url="https://ya.ru")
-    keyboard.add(url_button)
-    bot.send_message(message.chat.id, "Привет! Нажми на кнопку и перейди в поисковик.", reply_markup=keyboard)
+def input_link_menu(message):
+    global subject_var, subject_type_var, subject_link_var, subject_password_var
+    #bot.send_message(message.chat.id, 'Вы прикрепили ссылочку ({}) на <b>{}</b>. занятие по предмету <b>{}</b>. Ссылка будет отображаться в расписании под данным предметом :)'.format(message.text, subject_type_var.lower(), subject_var), parse_mode='HTML', disable_web_page_preview=True)
+
+    if message.text == 'Добавить ссылку':
+        add_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        add_link_keyboard.add('Готово', back_button)
+        bot.send_message(message.chat.id, 'отправьте мне ссылку на пару', reply_markup=add_link_keyboard)
+        bot.register_next_step_handler(message, input_link)
+
+    elif message.text == 'Добавить пароль':
+        add_link_password_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+        add_link_password_keyboard.add('Готово', back_button)
+        bot.send_message(message.chat.id, 'отправьте мне пароль к ссылке, если он присутствует', reply_markup=add_link_password_keyboard)
+        bot.register_next_step_handler(message, input_link_pass)
+
+    elif message.text == 'Отмена':
+        bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(message, main_menu)
+
+    elif message.text == 'Далее':
+        bot.send_message(message.chat.id, 'Поздравляю. Вы создали ссылочку для: \n{} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=main_menu_keyboard)
+        bot.register_next_step_handler(message, main_menu)
+
+    else:
+        bot.send_message(message.chat.id, 'клас')
+        bot.register_next_step_handler(message, input_link_menu)
+
+
+def input_link(message):
+    global link_redact_keyboardlink_redact_keyboard, subject_var, subject_type_var, subject_link_var
+
+    if message.text == back_button:
+        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    elif message.text == 'Готово':
+        bot.send_message(message.chat.id, 'Если нужно, тык на добавить пароль, иначе готово', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    else:
+        subject_link_var = message.text
+        bot.send_message(message.chat.id, 'Предмет: {} - {}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var))
+        bot.register_next_step_handler(message, input_link)
+
+
+def input_link_pass(message):
+    global subject_link_var, subject_password_var
+    if message.text == back_button:
+        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    elif message.text == 'Готово':
+        bot.send_message(message.chat.id, 'тык далее', reply_markup=link_redact_keyboard)
+        bot.register_next_step_handler(message, input_link_menu)
+
+    else:
+
+        subject_password_var = message.text
+        bot.send_message(message.chat.id,
+                         'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var))
+        bot.register_next_step_handler(message, input_link_pass)
+
+
 '''                        
 ########################################################################################################################                    
 MAIN MENU END
@@ -552,12 +676,12 @@ def set_notification(message):
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
-        elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
-            cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
-            db.add_notification(message.chat.id, cron_date)
-            send_notification(message.chat.id, cron_date)
-            bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_menu_keyboard)
-            bot.register_next_step_handler(message, callback=settings_menu)
+        # elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
+        #     cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
+        #     db.add_notification(message.chat.id, cron_date)
+        #     send_notification(message.chat.id, cron_date)
+        #     bot.send_message(message.chat.id, 'Время установлено', reply_markup=settings_menu_keyboard)
+        #     bot.register_next_step_handler(message, callback=settings_menu)
 
         else:
             bot.send_message(message.chat.id, 'Немножечко не по формату :(', reply_markup=back_button_keyboard)
@@ -568,8 +692,8 @@ def set_notification(message):
         bot.register_next_step_handler(message, callback=set_notification)
 
 
-def send_notification(user_id: int, cron_date: str):
-    pass
+# def send_notification(user_id: int, cron_date: str):
+#   pass
 
 
 '''                                            
@@ -609,6 +733,29 @@ def change_group_name(message):
                              format(db.get_group_name_by_id(message.chat.id)[0]),
                              parse_mode='HTML', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
+
+            global links_inline_subjects_keyboard, w, w_dict
+            links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
+
+            w = []
+            w_dict = {}
+
+            list_subjects = list(Schedule.get_lessons(message.chat.id))
+            len_list_subjects = len(Schedule.get_lessons(message.chat.id))
+            len_subjects = 0
+            for subject in list_subjects:
+                len_subjects += 1
+                w.append(subject)
+                w_dict[subject[:15]] = subject
+
+
+                if len_subjects < len_list_subjects + 1:
+                    links_inline_subjects_keyboard.add(
+                        telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
+
+            links_inline_subjects_keyboard.add(
+                telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'),
+                in_main_menu_inline_button)
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Я о такой группе пока-что не слышал. Попробуй ещё раз.'

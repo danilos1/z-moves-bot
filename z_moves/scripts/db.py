@@ -28,7 +28,19 @@ def init_db(force: bool = True):
                     registration_date   text,
                     user_name           text,
                     group_name          text,
-                    last_activity       text 
+                    last_activity       text
+                )
+            ''')
+
+    c.execute('''
+                CREATE TABLE IF NOT EXISTS links (
+                    user_id         int,
+                    link            text,
+                    link_password   text,
+                    lesson_name     text,
+                    lesson_type     text,
+                    
+                    foreign key(user_id) references users(user_id)
                 )
             ''')
 
@@ -44,15 +56,6 @@ def init_db(force: bool = True):
         )
     ''')
 
-    c.execute('''
-            CREATE TABLE IF NOT EXISTS links (
-                user_id      int,
-                link         text not null,
-                description  text not null,
-
-                foreign key(user_id) references users(user_id)
-            )
-        ''')
 
     c.execute('''
             CREATE TABLE IF NOT EXISTS mails (
@@ -75,9 +78,17 @@ def init_db(force: bool = True):
 
     conn.commit()
 
+def insert_link(user_id, link, link_password, lesson_name, lesson_type):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO links (user_id, link, link_password, lesson_name, lesson_type) VALUES (%s, %s, %s, %s, %s)',
+        (user_id,link, link_password, lesson_name, lesson_type,)
+    )
+    conn.commit()
+
+
 # working with users table
-
-
 def users_register_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
@@ -138,6 +149,16 @@ def add_links(user_id: int, link: str, description: str):
     conn.commit()
 
 
+def put_lesson_number(user_id: int, lesson_number: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO links user_id VALUES %s',
+        (user_id, lesson_number,)
+    )
+    conn.commit()
+
+
 def add_mails(user_id: int, link: str, description: str):
     conn = get_connection()
     c = conn.cursor()
@@ -163,6 +184,13 @@ def get_links_by_id(uid: int):
 
     return c.fetchall()
 
+
+def get_lesson_number(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT lesson_number FROM links WHERE user_id = %s', (uid,))
+
+    return c.fetchone()
 
 def get_mails_by_id(uid: int):
     conn = get_connection()
