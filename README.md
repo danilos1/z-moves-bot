@@ -1,5 +1,8 @@
 # Z-Moves-bot
 
+<p align="center">
+  <img src="https://github.com/danilos1/z-moves-bot/blob/main/img/z-moves_logo.png"/>
+</p>
 
 ## It would simplify student's and teacher's life.
 This bot is intended for showing KPI schedule for any group and any teacher. Simple structure help any users discover anything fro self KPI schedule.
