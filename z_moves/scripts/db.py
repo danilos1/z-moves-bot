@@ -47,8 +47,11 @@ def init_db(force: bool = True):
     c.execute('''
             CREATE TABLE IF NOT EXISTS links (
                 user_id      int,
+                subject      text not null,
+                subject_type text not null,
                 link         text not null,
-                description  text not null,
+                password     text,
+                description  text,
 
                 foreign key(user_id) references users(user_id)
             )
@@ -159,7 +162,7 @@ def get_hotline_by_id(uid: int):
 def get_links_by_id(uid: int):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT link, description FROM links WHERE user_id = %s', (uid,))
+    c.execute('SELECT subject, subject_type, link, password, description FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchall()
 
