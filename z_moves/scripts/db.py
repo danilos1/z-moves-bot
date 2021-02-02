@@ -6,8 +6,13 @@ __connection = None
 
 def get_connection():
     global db
-    db = psycopg2.connect(dbname=os.environ['DB_NAME'], user=os.environ['DB_USERNAME'],
-                          password=os.environ['DB_PASSWORD'], host=os.environ['DB_HOST'], port=os.environ['DB_PORT'])
+    db = psycopg2.connect(
+        dbname=os.environ['DB_NAME'],
+        user=os.environ['DB_USERNAME'],
+        password=os.environ['DB_PASSWORD'],
+        host=os.environ['DB_HOST'],
+        port=os.environ['DB_PORT']
+    )
     return db
 
 
