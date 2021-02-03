@@ -33,21 +33,21 @@ def init_db(force: bool = True):
                     registration_date   text,
                     user_name           text,
                     group_name          text,
-                    last_activity       text 
+                    last_activity       text
                 )
             ''')
 
     c.execute('''
-        CREATE TABLE IF NOT EXISTS hotline (
-            user_id     int,
-            subject     text not null,
-            task        text not null,
-            deadline    text not null,
-            link        text,
-            
-            foreign key(user_id) references users(user_id)
-        )
-    ''')
+                CREATE TABLE IF NOT EXISTS hotline (
+                    user_id     int,
+                    subject     text not null,
+                    task        text not null,
+                    deadline    text not null,
+                    link        text,
+                    
+                    foreign key(user_id) references users(user_id)
+                )
+            ''')
 
     c.execute('''
             CREATE TABLE IF NOT EXISTS links (
@@ -83,15 +83,33 @@ def init_db(force: bool = True):
 
     conn.commit()
 
-# working with users table
 
-
-def users_register_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
+def insert_link(user_id, link, link_password, lesson_name, lesson_type):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO users (user_id, registration_date, user_name, group_name, last_activity) VALUES (%s, %s, %s, %s, %s)',
+        'INSERT INTO links (user_id, link, link_password, lesson_name, lesson_type) VALUES (%s, %s, %s, %s, %s)',
+        (user_id, link, link_password, lesson_name, lesson_type,)
+    )
+    conn.commit()
+
+# working with users table
+def add_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO users (user_id, registration_date, user_name, group_name, last_activity) '
+        'VALUES (%s, %s, %s, %s, %s)',
         (user_id, registration_date, user_name, group_name, last_activity,)
+    )
+    conn.commit()
+
+def update_group(user_id, group, last_activity):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'UPDATE users SET group_name = %s, last_activity = %s WHERE user_id = %s',
+        (group, last_activity, user_id,)
     )
     conn.commit()
 
@@ -136,12 +154,13 @@ def add_hotline_without_link(user_id: int, subject: str, task: str, deadline: st
     conn.commit()
 
 
-def add_links(user_id: int, link: str, description: str):
+def add_links(user_id: int, subject, subject_type, link, password='', description=''):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO links (user_id, link, description) VALUES (%s, %s, %s)',
-        (user_id, link, description,)
+        'INSERT INTO links (user_id, subject, subject_type, link, password, description) '
+        'VALUES (%s, %s, %s, %s, %s, %s)',
+        (user_id, subject, subject_type, link, password, description,)
     )
     conn.commit()
 
@@ -170,6 +189,14 @@ def get_links_by_id(uid: int):
     c.execute('SELECT subject, subject_type, link, password, description FROM links WHERE user_id = %s', (uid,))
 
     return c.fetchall()
+
+
+def get_lesson_number(uid: int):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT lesson_number FROM links WHERE user_id = %s', (uid,))
+
+    return c.fetchone()
 
 
 def get_mails_by_id(uid: int):

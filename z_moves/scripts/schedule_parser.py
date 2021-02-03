@@ -150,15 +150,14 @@ class Schedule:
 
                 for s in subject_links:
                     if s[0] == lesson_name and s[1] == lesson_type:
-                        subject_link = '\t<u>Ссылка на конференцию:</u> {0}\n'.format(s[2])
-                        if s[3] is not None:
-                            subject_link += "\tКод доступа: <code>{0}</code>\n".format(s[3])
+                        subject_link = '<u>Ссылка на конференцию:</u> {0}\n'.format(s[2])
+                        if s[3] != '':
+                            subject_link += "Код доступа: <code>{0}</code>\n".format(s[3])
 
-                        if s[4] is not None:
-                            subject_link += '\tℹ️{0}\n'.format(s[4])
+                        if s[4] != '':
+                            subject_link += s[4] + '\n'
 
                         schedule_body += subject_link
-
 
         if schedule_body == '':
             schedule_body = free
