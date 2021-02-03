@@ -1,7 +1,7 @@
 import z_moves.scripts.db as db
 
 def get_links(user_id: int):
-    links = ''
+    links = None
     if not db.get_links_by_id(user_id):
         links = 'На данный момент у тебя нету созданных ссылок. Выбери следующую опцию'
     else:

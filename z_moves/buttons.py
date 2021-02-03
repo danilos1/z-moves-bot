@@ -63,6 +63,9 @@ change_group_name_button = '‍🔧 Изменить группу'
 
 # global back button
 back_button = '⬅️Назад'
+cancel_button = 'Отмена'
+ready_button = 'Готово'
+in_main_menu_button = 'Главное меню'
 inline_in_main_menu_button = telebot.types.InlineKeyboardButton(text='В главное меню', callback_data='main_menu')
 inline_step_back_button = telebot.types.InlineKeyboardButton(text='Назад', callback_data='step_back_button')
 

@@ -25,15 +25,13 @@ main_menu_keyboard.add(links_button, hotlines_button, mails_button)
 main_menu_keyboard.add(info_button, help_button)
 main_menu_keyboard.add(test_button)
 
-
-
 links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
 links_inline_ready_keyboard.add(links_inline_ready_button)
 
 
 links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
 links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button, links_inline_practice_button)
-links_subject_type_inline_keyboard.add(telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'))
+links_subject_type_inline_keyboard.add(telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'), in_main_menu_inline_button)
 
 test_keyboard = telebot.types.InlineKeyboardMarkup()
 test_keyboard.add(test_button)
@@ -95,7 +93,6 @@ def start_message(message):
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
         bot.register_next_step_handler(message, callback=start_message)
 
-
 def registration(message):
     try:
 
@@ -148,7 +145,7 @@ MAIN MENU
 ########################################################################################################################                                                       
 '''
 
-@bot.message_handler(func=lambda message: True)
+@bot.message_handler(content_types=['text'])
 def main_menu(message):
     try:
         if message.text == schedule_button:
@@ -163,11 +160,9 @@ def main_menu(message):
             bot.register_next_step_handler(message, callback=settings_menu)
 
         elif message.text == links_button:
-            global link_inline_keyboard
             link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
             link_inline_keyboard.add(links_inline_add_button)
             link_inline_keyboard.add(in_main_menu_inline_button)
-
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'В этом меню ты можешь добавлять ссылки на конференции, а по нужде и пароли к ним.', reply_markup=link_inline_keyboard)
 
@@ -198,9 +193,6 @@ def main_menu(message):
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
 
-        else:
-            bot.send_message(message.chat.id, '<b>{}</b>???? моя. твоя. не понимать.'.format(message.text), reply_markup=main_menu_keyboard, parse_mode='HTML')
-            bot.register_next_step_handler(message, callback=main_menu)
 
     except AttributeError:
 
@@ -208,9 +200,28 @@ def main_menu(message):
         bot.register_next_step_handler(message, callback=main_menu)
 
 
+subject_link_var = None
+subject_password_var = None
+
+link_redact_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+link_redact_keyboard.add('Добавить ссылку', 'Добавить пароль')
+link_redact_keyboard.add('Отмена', 'Далее')
+
+add_link_password_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+add_link_password_keyboard.add(back_button, 'Готово')
+
+cancel_or_confirm_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+cancel_or_confirm_keyboard.add('Отмена', 'Готово')
+
+in_main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+in_main_menu_keyboard.add(in_main_menu_button)
+
+cancel_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+cancel_keyboard.add(cancel_button)
+
 @bot.callback_query_handler(func=lambda call: True)
 def test_inline_reply(call):
-    global subject_var, subject_type_var, link_inline_keyboard
+    global subject_var, subject_type_var, link_inline_keyboard, link_redact_keyboard
 
     if call.data == 'add_link':
         bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id,
@@ -230,13 +241,9 @@ def test_inline_reply(call):
     elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
         subject_type_var = call.data
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        global link_redact_keyboard
-        link_redact_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-        link_redact_keyboard.add('Добавить ссылку', 'Добавить пароль')
-        link_redact_keyboard.add('Отмена', 'Далее')
-        bot.send_message(call.message.chat.id, 'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nВыберите следующее действие :)'.format(subject_var, subject_type_var), reply_markup=link_redact_keyboard, parse_mode='HTML')
 
-        bot.register_next_step_handler(call.message, input_link_menu)
+        bot.send_message(call.message.chat.id, 'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nЕБАШ ССЫЛКУ ИЛИ Я ТЯ ЗАХУЯРЮ'.format(subject_var, subject_type_var), reply_markup=cancel_keyboard, parse_mode='HTML')
+        bot.register_next_step_handler(call.message, input_link)
 
     elif call.data == 'main_menu':
         bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -244,20 +251,16 @@ def test_inline_reply(call):
         bot.register_next_step_handler(call.message, main_menu)
 
 
+
 @bot.message_handler(content_types=['text'])
 def input_link_menu(message):
-    global subject_var, subject_type_var, subject_link_var, subject_password_var
-    #bot.send_message(message.chat.id, 'Вы прикрепили ссылочку ({}) на <b>{}</b>. занятие по предмету <b>{}</b>. Ссылка будет отображаться в расписании под данным предметом :)'.format(message.text, subject_type_var.lower(), subject_var), parse_mode='HTML', disable_web_page_preview=True)
+    global subject_var, subject_type_var, subject_link_var, subject_password_var, link_redact_keyboard
 
-    if message.text == 'Добавить ссылку':
-        add_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-        add_link_keyboard.add('Готово', back_button)
-        bot.send_message(message.chat.id, 'отправьте мне ссылку на пару', reply_markup=add_link_keyboard)
+    if message.text == 'Добавить ссылку' or message.text == 'Изменить cсылку':
+        bot.send_message(message.chat.id, 'отправьте мне ссылку на пару', reply_markup=add_link_password_keyboard)
         bot.register_next_step_handler(message, input_link)
 
-    elif message.text == 'Добавить пароль':
-        add_link_password_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-        add_link_password_keyboard.add('Готово', back_button)
+    elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
         bot.send_message(message.chat.id, 'отправьте мне пароль к ссылке, если он присутствует', reply_markup=add_link_password_keyboard)
         bot.register_next_step_handler(message, input_link_pass)
 
@@ -265,47 +268,107 @@ def input_link_menu(message):
         bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
         bot.register_next_step_handler(message, main_menu)
 
-    elif message.text == 'Далее':
-        bot.send_message(message.chat.id, 'Поздравляю. Вы создали ссылочку для: \n{} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=main_menu_keyboard)
-        bot.register_next_step_handler(message, main_menu)
-
     else:
         bot.send_message(message.chat.id, 'клас')
         bot.register_next_step_handler(message, input_link_menu)
 
-
+@bot.message_handler(content_types=['text'])
 def input_link(message):
-    global link_redact_keyboardlink_redact_keyboard, subject_var, subject_type_var, subject_link_var
+    global subject_var, subject_type_var, subject_link_var, subject_password_var, link_redact_keyboard
 
-    if message.text == back_button:
-        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
-        bot.register_next_step_handler(message, input_link_menu)
+    if message.text:
 
-    elif message.text == 'Готово':
-        bot.send_message(message.chat.id, 'Если нужно, тык на добавить пароль, иначе готово', reply_markup=link_redact_keyboard)
-        bot.register_next_step_handler(message, input_link_menu)
+        if message.text == 'Отмена':
+            bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, main_menu)
+
+        elif message.text == 'Готово':
+            if subject_password_var is None:
+                bot.send_message(message.chat.id, 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var), reply_markup=main_menu_keyboard)
+                db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var)
+                subject_link_var = None
+                subject_password_var = None
+                bot.register_next_step_handler(message, main_menu)
+            elif subject_password_var is not None:
+                bot.send_message(message.chat.id,
+                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}\nПароль: {}'.format(subject_var,
+                                                                                                  subject_type_var,
+                                                                                                  subject_link_var, subject_password_var),
+                                 reply_markup=main_menu_keyboard)
+                db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
+                subject_link_var = None
+                subject_password_var = None
+                bot.register_next_step_handler(message, main_menu)
+
+
+        elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
+            inserted_link_keyboard_to_password = telebot.types.ReplyKeyboardMarkup(True, True)
+            inserted_link_keyboard_to_password.add('Изменить ссылку')
+            inserted_link_keyboard_to_password.add(cancel_button, ready_button)
+            bot.send_message(message.chat.id, 'Отправляй пароль гнида', reply_markup=inserted_link_keyboard_to_password)
+            bot.register_next_step_handler(message, input_link_pass)
+
+
+        elif message.text == message.text:
+            if subject_password_var is None:
+                subject_link_var = message.text
+                inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+                inserted_link_keyboard.add('Добавить пароль')
+                inserted_link_keyboard.add(cancel_button, ready_button)
+                bot.send_message(message.chat.id, 'Предмет: {} - {}\nСсылка: {}\n\nТеперь можна крч подтверждать или добавить пароль, если надо'.format(subject_var, subject_type_var, subject_link_var), reply_markup=inserted_link_keyboard, disable_web_page_preview=True)
+                bot.register_next_step_handler(message, input_link)
+            elif subject_password_var is not None:
+                subject_link_var = message.text
+                inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+                inserted_link_keyboard.add('Изменить пароль')
+                inserted_link_keyboard.add(cancel_button, ready_button)
+                bot.send_message(message.chat.id,
+                                 'Предмет: {} - {}\nСсылка: {}\nПароль: {}\n\nТеперь можна крч подтверждать или добавить пароль, если надо'.format(
+                                     subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=inserted_link_keyboard,
+                                 disable_web_page_preview=True)
+                bot.register_next_step_handler(message, input_link)
 
     else:
-        subject_link_var = message.text
-        bot.send_message(message.chat.id, 'Предмет: {} - {}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var))
+        bot.send_message(message.chat.id, 'клас')
         bot.register_next_step_handler(message, input_link)
 
-
+@bot.message_handler(content_types=['text'])
 def input_link_pass(message):
-    global subject_link_var, subject_password_var
-    if message.text == back_button:
-        bot.send_message(message.chat.id, 'редактировка', reply_markup=link_redact_keyboard)
-        bot.register_next_step_handler(message, input_link_menu)
+    global subject_link_var, subject_password_var, link_redact_keyboard, subject_var, subject_type_var
 
-    elif message.text == 'Готово':
-        bot.send_message(message.chat.id, 'тык далее', reply_markup=link_redact_keyboard)
-        bot.register_next_step_handler(message, input_link_menu)
+    if message.text == 'Готово':
+        if subject_password_var is None:
+            bot.send_message(message.chat.id, 'Вы успешно Предмет: {} - {}\nСсылка: {}\n'.format(subject_var, subject_type_var, subject_link_var), reply_markup=main_menu_keyboard, disable_web_page_preview=True)
+            db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
+            subject_link_var = None
+            subject_password_var = None
+            bot.register_next_step_handler(message, main_menu)
+
+        elif subject_password_var is not None:
+            bot.send_message(message.chat.id, 'Заебись нахуй. Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=main_menu_keyboard, disable_web_page_preview=True)
+            db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
+            subject_link_var = None
+            subject_password_var = None
+            bot.register_next_step_handler(message, main_menu)
+
+    elif message.text == 'Изменить ссылку':
+        if subject_password_var is not None:
+            change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+            change_link_keyboard.add('Изменить пароль')
+            change_link_keyboard.add(cancel_button, ready_button)
+            bot.send_message(message.chat.id, 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=change_link_keyboard)
+            bot.register_next_step_handler(message, input_link)
+        elif subject_password_var is None:
+            change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+            change_link_keyboard.add('Изменить пароль')
+            change_link_keyboard.add(cancel_button, ready_button)
+            bot.send_message(message.chat.id, 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var),reply_markup=change_link_keyboard)
+            bot.register_next_step_handler(message, input_link)
 
     else:
-
         subject_password_var = message.text
         bot.send_message(message.chat.id,
-                         'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var))
+                         'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), disable_web_page_preview=True)
         bot.register_next_step_handler(message, input_link_pass)
 
 

@@ -50,18 +50,6 @@ def init_db(force: bool = True):
             ''')
 
     c.execute('''
-        CREATE TABLE IF NOT EXISTS hotline (
-            user_id     int,
-            subject     text not null,
-            task        text not null,
-            deadline    text not null,
-            link        text,
-            
-            foreign key(user_id) references users(user_id)
-        )
-    ''')
-
-    c.execute('''
             CREATE TABLE IF NOT EXISTS links (
                 user_id      int,
                 subject      text not null,
