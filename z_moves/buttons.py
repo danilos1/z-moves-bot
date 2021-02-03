@@ -71,6 +71,7 @@ inline_step_back_button = telebot.types.InlineKeyboardButton(text='Назад', 
 
 # reply of not available bot functions
 not_available_reply = '⛔ В разработке'
+rereg_reply = 'Введи название своей группы.\n\nПример: <b>IO-83</b>'
 
 # test button
 test_button = 'test'

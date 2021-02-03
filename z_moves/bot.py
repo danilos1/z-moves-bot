@@ -90,7 +90,7 @@ def start_message(message):
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
         bot.register_next_step_handler(message, callback=start_message)
 
-
+@bot.message_handler(content_types=['text'])
 def registration(message):
     try:
         if Schedule.is_group_exist(message.text):
@@ -101,6 +101,7 @@ def registration(message):
 
             bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
                              reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, main_menu)
 
             global links_inline_subjects_keyboard, w, w_dict
             links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
@@ -121,6 +122,7 @@ def registration(message):
                         telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
             links_inline_subjects_keyboard.add(
                  telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'), in_main_menu_inline_button)
+            bot.register_next_step_handler(message, callback=main_menu)
 
 
         else:
@@ -144,6 +146,7 @@ REGISTRATION END
 MAIN MENU  
 ########################################################################################################################                                                       
 '''
+
 
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
@@ -195,6 +198,15 @@ def main_menu(message):
         elif message.text == test_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
+
+        else:
+            bot.send_message(message.chat.id, 'qwrqwr', reply_markup=main_menu_keyboard)
+            bot.register_next_step_handler(message, main_menu)
+
 
     except AttributeError:
 
@@ -253,7 +265,6 @@ def test_inline_reply(call):
         bot.register_next_step_handler(call.message, main_menu)
 
 
-
 @bot.message_handler(content_types=['text'])
 def input_link_menu(message):
     global subject_var, subject_type_var, subject_link_var, subject_password_var, link_redact_keyboard
@@ -273,6 +284,7 @@ def input_link_menu(message):
     else:
         bot.send_message(message.chat.id, 'клас')
         bot.register_next_step_handler(message, input_link_menu)
+
 
 @bot.message_handler(content_types=['text'])
 def input_link(message):
@@ -410,9 +422,6 @@ def schedule_menu(message):
             bot.send_message(message.chat.id, 'А теперь день', reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
 
-        else:
-            bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=schedule_menu_keyboard)
-            bot.register_next_step_handler(message, callback=schedule_menu)
 
     except AttributeError:
         bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=schedule_menu_keyboard)
