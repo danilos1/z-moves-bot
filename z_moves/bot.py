@@ -1,11 +1,11 @@
 import datetime
 import os
-# import re
 import time
 from z_moves.buttons import *
 from z_moves.scripts.schedule_parser import *
 from z_moves.scripts import db
-import random
+import z_moves.scripts.service.links as links
+import z_moves.scripts.service.users as users
 
 bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 db.init_db()
@@ -16,9 +16,7 @@ KEYBOARD SECTION
 ########################################################################################################################                               
 '''
 
-
 # main menu
-
 main_menu_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 main_menu_keyboard.add(schedule_button, settings_button)
 main_menu_keyboard.add(links_button, hotlines_button, mails_button)
@@ -75,7 +73,6 @@ REGISTRATION
 ########################################################################################################################
 '''
 
-
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
@@ -93,13 +90,17 @@ def start_message(message):
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
         bot.register_next_step_handler(message, callback=start_message)
 
+
 def registration(message):
     try:
-
         if Schedule.is_group_exist(message.text):
-            db.users_register_user(message.chat.id, time.strftime('%d/%m/%y, %X'), message.from_user.username,
-                                   message.text.upper(), time.strftime('%d/%m/%y, %X'))
-            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂', reply_markup=main_menu_keyboard)
+            if users.is_user_exists(message.chat.id):
+                users.update_user(message.chat.id, message.text.upper())
+            else:
+                users.add_user(message.chat.id, message.from_user.username, message.text.upper())
+
+            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
+                             reply_markup=main_menu_keyboard)
 
             global links_inline_subjects_keyboard, w, w_dict
             links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
@@ -114,7 +115,6 @@ def registration(message):
                 len_subjects += 1
                 w.append(subject)
                 w_dict[subject[:15]] = subject
-
 
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(
@@ -164,7 +164,10 @@ def main_menu(message):
             link_inline_keyboard.add(links_inline_add_button)
             link_inline_keyboard.add(in_main_menu_inline_button)
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
-            bot.send_message(message.chat.id, 'В этом меню ты можешь добавлять ссылки на конференции, а по нужде и пароли к ним.', reply_markup=link_inline_keyboard)
+            bot.send_message(message.chat.id,
+                             links.get_links(message.chat.id),
+                             parse_mode='HTML',
+                             reply_markup=link_inline_keyboard)
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -192,7 +195,6 @@ def main_menu(message):
         elif message.text == test_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, not_available_reply, reply_markup=main_menu_keyboard)
-
 
     except AttributeError:
 
@@ -300,14 +302,12 @@ def input_link(message):
                 subject_password_var = None
                 bot.register_next_step_handler(message, main_menu)
 
-
         elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
             inserted_link_keyboard_to_password = telebot.types.ReplyKeyboardMarkup(True, True)
             inserted_link_keyboard_to_password.add('Изменить ссылку')
             inserted_link_keyboard_to_password.add(cancel_button, ready_button)
             bot.send_message(message.chat.id, 'Отправляй пароль гнида', reply_markup=inserted_link_keyboard_to_password)
             bot.register_next_step_handler(message, input_link_pass)
-
 
         elif message.text == message.text:
             if subject_password_var is None:
@@ -623,7 +623,6 @@ HOTLINE FUNCTION
 @bot.message_handler(content_types=['text'])
 def add_hotline(message):
     try:
-
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
@@ -789,7 +788,6 @@ def change_group_name(message):
                 len_subjects += 1
                 w.append(subject)
                 w_dict[subject[:15]] = subject
-
 
                 if len_subjects < len_list_subjects + 1:
                     links_inline_subjects_keyboard.add(

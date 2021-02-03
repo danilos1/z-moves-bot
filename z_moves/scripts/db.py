@@ -93,14 +93,23 @@ def insert_link(user_id, link, link_password, lesson_name, lesson_type):
     )
     conn.commit()
 
-
 # working with users table
-def users_register_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
+def add_user(user_id, registration_date: str, user_name: str, group_name: str, last_activity: str):
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'INSERT INTO users (user_id, registration_date, user_name, group_name, last_activity) VALUES (%s, %s, %s, %s, %s)',
+        'INSERT INTO users (user_id, registration_date, user_name, group_name, last_activity) '
+        'VALUES (%s, %s, %s, %s, %s)',
         (user_id, registration_date, user_name, group_name, last_activity,)
+    )
+    conn.commit()
+
+def update_group(user_id, group, last_activity):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        'UPDATE users SET group_name = %s, last_activity = %s WHERE user_id = %s',
+        (group, last_activity, user_id,)
     )
     conn.commit()
 
@@ -152,16 +161,6 @@ def add_links(user_id: int, subject, subject_type, link, password='', descriptio
         'INSERT INTO links (user_id, subject, subject_type, link, password, description) '
         'VALUES (%s, %s, %s, %s, %s, %s)',
         (user_id, subject, subject_type, link, password, description,)
-    )
-    conn.commit()
-
-
-def put_lesson_number(user_id: int, lesson_number: int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute(
-        'INSERT INTO links user_id VALUES %s',
-        (user_id, lesson_number,)
     )
     conn.commit()
 
