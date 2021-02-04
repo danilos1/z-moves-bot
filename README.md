@@ -1,4 +1,4 @@
-# Z-Moves-bot
+# Z-MovesBot
 
 <p align="center">
   <img src="https://github.com/danilos1/z-moves-bot/blob/main/img/z-moves_logo.png"/>
