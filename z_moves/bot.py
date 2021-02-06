@@ -26,10 +26,10 @@ main_menu_keyboard.add(test_button)
 links_inline_ready_keyboard = telebot.types.InlineKeyboardMarkup()
 links_inline_ready_keyboard.add(links_inline_ready_button)
 
-
 links_subject_type_inline_keyboard = telebot.types.InlineKeyboardMarkup()
 links_subject_type_inline_keyboard.add(links_inline_lec_button, links_inline_lab_button, links_inline_practice_button)
-links_subject_type_inline_keyboard.add(telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'), in_main_menu_inline_button)
+links_subject_type_inline_keyboard.add(
+    telebot.types.InlineKeyboardButton(text='Назад', callback_data='second_back_button'), in_main_menu_inline_button)
 
 test_keyboard = telebot.types.InlineKeyboardMarkup()
 test_keyboard.add(test_button)
@@ -73,6 +73,7 @@ REGISTRATION
 ########################################################################################################################
 '''
 
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     try:
@@ -90,6 +91,7 @@ def start_message(message):
         bot.send_message(message.chat.id, 'i dont understand, sorry bro')
         bot.register_next_step_handler(message, callback=start_message)
 
+
 @bot.message_handler(content_types=['text'])
 def registration(message):
     try:
@@ -98,10 +100,6 @@ def registration(message):
                 users.update_user(message.chat.id, message.text.upper())
             else:
                 users.add_user(message.chat.id, message.from_user.username, message.text.upper())
-
-            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
-                             reply_markup=main_menu_keyboard)
-            bot.register_next_step_handler(message, main_menu)
 
             global links_inline_subjects_keyboard, w, w_dict
             links_inline_subjects_keyboard = telebot.types.InlineKeyboardMarkup()
@@ -121,9 +119,15 @@ def registration(message):
                     links_inline_subjects_keyboard.add(
                         telebot.types.InlineKeyboardButton(text=subject, callback_data='{}'.format(subject[:15])))
             links_inline_subjects_keyboard.add(
-                 telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'), in_main_menu_inline_button)
+                telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'),
+                in_main_menu_inline_button)
+            bot.send_message(message.chat.id, 'Есть такая! Ну а теперь приступим 🙂',
+                             reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
 
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Что-то я о такой группе ещё не слышал 🤥'
@@ -148,9 +152,13 @@ MAIN MENU
 '''
 
 
+lesson_dict = {}
+
+
 @bot.message_handler(content_types=['text'])
 def main_menu(message):
     try:
+        global lesson_dict
         if message.text == schedule_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id, 'Выбери опцию отображения расписания.',
@@ -166,11 +174,13 @@ def main_menu(message):
             link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
             link_inline_keyboard.add(links_inline_add_button)
             link_inline_keyboard.add(in_main_menu_inline_button)
+            lesson_dict = {message.chat.id: {'lesson_name': '', 'lesson_type': '', 'lesson_link': '', 'lesson_password': ''}}
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id,
                              links.get_links(message.chat.id),
                              parse_mode='HTML',
                              reply_markup=link_inline_keyboard)
+
 
         elif message.text == hotlines_button:
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
@@ -210,12 +220,10 @@ def main_menu(message):
 
     except AttributeError:
 
-        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=None )
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=None)
         bot.register_next_step_handler(message, callback=main_menu)
 
 
-subject_link_var = None
-subject_password_var = None
 
 link_redact_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 link_redact_keyboard.add('Добавить ссылку', 'Добавить пароль')
@@ -233,30 +241,40 @@ in_main_menu_keyboard.add(in_main_menu_button)
 cancel_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
 cancel_keyboard.add(cancel_button)
 
+
 @bot.callback_query_handler(func=lambda call: True)
 def test_inline_reply(call):
-    global subject_var, subject_type_var, link_inline_keyboard, link_redact_keyboard
+    global link_inline_keyboard, link_redact_keyboard, lesson_dict
 
     if call.data == 'add_link':
         bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id,
-                              message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
+                              message_id=call.message.message_id, reply_markup=links_inline_subjects_keyboard,
+                              parse_mode='HTML')
 
     elif call.data in w_dict.keys():
-        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard, parse_mode='HTML')
-        subject_var = w_dict.get(call.data)
+        bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id,
+                              message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard,
+                              parse_mode='HTML')
+        lesson_dict[call.message.chat.id]['lesson_name'] = call.data
+        print(lesson_dict)
 
     elif call.data == 'first_back_button':
-        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=link_inline_keyboard, parse_mode='HTML')
+        bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              reply_markup=link_inline_keyboard, parse_mode='HTML')
 
     elif call.data == 'second_back_button':
         bot.edit_message_text(text='Выбери чёта', chat_id=call.message.chat.id, message_id=call.message.message_id,
                               reply_markup=links_inline_subjects_keyboard, parse_mode='HTML')
 
     elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
-        subject_type_var = call.data
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
 
-        bot.send_message(call.message.chat.id, 'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nЕБАШ ССЫЛКУ ИЛИ Я ТЯ ЗАХУЯРЮ'.format(subject_var, subject_type_var), reply_markup=cancel_keyboard, parse_mode='HTML')
+        lesson_dict[call.message.chat.id]['lesson_type'] = call.data
+        print(lesson_dict)
+
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id,
+                         'Вы выбрали предмет:\n<i>{}</i> — <b>{}</b>. \nЕБАШ ССЫЛКУ ИЛИ Я ТЯ ЗАХУЯРЮ'.format(
+                             lesson_dict[call.message.chat.id]['lesson_name'], lesson_dict[call.message.chat.id]['lesson_type']), reply_markup=cancel_keyboard, parse_mode='HTML')
         bot.register_next_step_handler(call.message, input_link)
 
     elif call.data == 'main_menu':
@@ -267,51 +285,51 @@ def test_inline_reply(call):
 
 @bot.message_handler(content_types=['text'])
 def input_link_menu(message):
-    global subject_var, subject_type_var, subject_link_var, subject_password_var, link_redact_keyboard
+    global link_redact_keyboard, lesson_dict
 
     if message.text == 'Добавить ссылку' or message.text == 'Изменить cсылку':
         bot.send_message(message.chat.id, 'отправьте мне ссылку на пару', reply_markup=add_link_password_keyboard)
         bot.register_next_step_handler(message, input_link)
 
     elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
-        bot.send_message(message.chat.id, 'отправьте мне пароль к ссылке, если он присутствует', reply_markup=add_link_password_keyboard)
+        bot.send_message(message.chat.id, 'отправьте мне пароль к ссылке, если он присутствует',
+                         reply_markup=add_link_password_keyboard)
         bot.register_next_step_handler(message, input_link_pass)
 
     elif message.text == 'Отмена':
         bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
         bot.register_next_step_handler(message, main_menu)
 
-    else:
-        bot.send_message(message.chat.id, 'клас')
-        bot.register_next_step_handler(message, input_link_menu)
+    elif message.text == '/start':
+        bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+        bot.register_next_step_handler(message, registration)
 
 
 @bot.message_handler(content_types=['text'])
 def input_link(message):
-    global subject_var, subject_type_var, subject_link_var, subject_password_var, link_redact_keyboard
+    global link_redact_keyboard, lesson_dict
 
-    if message.text:
+    try:
 
         if message.text == 'Отмена':
             bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, main_menu)
 
         elif message.text == 'Готово':
-            if subject_password_var is None:
-                bot.send_message(message.chat.id, 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var), reply_markup=main_menu_keyboard)
-                db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var)
-                subject_link_var = None
-                subject_password_var = None
-                bot.register_next_step_handler(message, main_menu)
-            elif subject_password_var is not None:
+            if lesson_dict[message.chat.id, lesson_dict[message.chat.id]['lesson_password']] == '':
                 bot.send_message(message.chat.id,
-                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}\nПароль: {}'.format(subject_var,
-                                                                                                  subject_type_var,
-                                                                                                  subject_link_var, subject_password_var),
+                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
                                  reply_markup=main_menu_keyboard)
-                db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
-                subject_link_var = None
-                subject_password_var = None
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'])
+
+                bot.register_next_step_handler(message, main_menu)
+            elif lesson_dict[message.chat.id, lesson_dict[message.chat.id]['lesson_password']] != '':
+                bot.send_message(message.chat.id,
+                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}\nПароль: {}'.format(
+                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                                 reply_markup=main_menu_keyboard)
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password'])
+                lesson_dict[message.chat.id].pop()
                 bot.register_next_step_handler(message, main_menu)
 
         elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
@@ -320,68 +338,98 @@ def input_link(message):
             inserted_link_keyboard_to_password.add(cancel_button, ready_button)
             bot.send_message(message.chat.id, 'Отправляй пароль гнида', reply_markup=inserted_link_keyboard_to_password)
             bot.register_next_step_handler(message, input_link_pass)
+            print(lesson_dict)
 
         elif message.text == message.text:
-            if subject_password_var is None:
-                subject_link_var = message.text
+            if lesson_dict[message.chat.id]['lesson_link'] == '':
+                lesson_dict[message.chat.id]['lesson_link'] = message.text
                 inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
                 inserted_link_keyboard.add('Добавить пароль')
                 inserted_link_keyboard.add(cancel_button, ready_button)
-                bot.send_message(message.chat.id, 'Предмет: {} - {}\nСсылка: {}\n\nТеперь можна крч подтверждать или добавить пароль, если надо'.format(subject_var, subject_type_var, subject_link_var), reply_markup=inserted_link_keyboard, disable_web_page_preview=True)
+                bot.send_message(message.chat.id,
+                                 'Предмет: {} - {}\nСсылка: {}\n\nТеперь можна крч подтверждать или добавить пароль, если надо'.format(
+                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
+                                 reply_markup=inserted_link_keyboard, disable_web_page_preview=True)
                 bot.register_next_step_handler(message, input_link)
-            elif subject_password_var is not None:
-                subject_link_var = message.text
+            elif lesson_dict[message.chat.id]['lesson_link'] != '':
+                lesson_dict[message.chat.id]['lesson_link'] = message.text
                 inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
                 inserted_link_keyboard.add('Изменить пароль')
                 inserted_link_keyboard.add(cancel_button, ready_button)
                 bot.send_message(message.chat.id,
                                  'Предмет: {} - {}\nСсылка: {}\nПароль: {}\n\nТеперь можна крч подтверждать или добавить пароль, если надо'.format(
-                                     subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=inserted_link_keyboard,
+                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                                 reply_markup=inserted_link_keyboard,
                                  disable_web_page_preview=True)
                 bot.register_next_step_handler(message, input_link)
 
-    else:
-        bot.send_message(message.chat.id, 'клас')
-        bot.register_next_step_handler(message, input_link)
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
+
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=schedule_menu_keyboard)
+        bot.register_next_step_handler(message, callback=schedule_menu)
+
 
 @bot.message_handler(content_types=['text'])
 def input_link_pass(message):
-    global subject_link_var, subject_password_var, link_redact_keyboard, subject_var, subject_type_var
+    global  link_redact_keyboard, lesson_dict
+    try:
+        if message.text == 'Готово':
+            if lesson_dict[message.chat.id]['lesson_password'] == '':
+                bot.send_message(message.chat.id,
+                                 'Вы успешно Предмет: {} - {}\nСсылка: {}\n'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
+                                 reply_markup=main_menu_keyboard, disable_web_page_preview=True)
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'])
+                subject_link_var = None
+                subject_password_var = None
+                bot.register_next_step_handler(message, main_menu)
 
-    if message.text == 'Готово':
-        if subject_password_var is None:
-            bot.send_message(message.chat.id, 'Вы успешно Предмет: {} - {}\nСсылка: {}\n'.format(subject_var, subject_type_var, subject_link_var), reply_markup=main_menu_keyboard, disable_web_page_preview=True)
-            db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
-            subject_link_var = None
-            subject_password_var = None
-            bot.register_next_step_handler(message, main_menu)
+            elif lesson_dict[message.chat.id]['lesson_password'] != '':
+                bot.send_message(message.chat.id,
+                                 'Заебись нахуй. Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                                 reply_markup=main_menu_keyboard, disable_web_page_preview=True)
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password'])
+                subject_link_var = None
+                subject_password_var = None
+                bot.register_next_step_handler(message, main_menu)
 
-        elif subject_password_var is not None:
-            bot.send_message(message.chat.id, 'Заебись нахуй. Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=main_menu_keyboard, disable_web_page_preview=True)
-            db.add_links(message.chat.id, subject_var, subject_type_var, subject_link_var, subject_password_var)
-            subject_link_var = None
-            subject_password_var = None
-            bot.register_next_step_handler(message, main_menu)
+        elif message.text == 'Изменить ссылку':
+            if lesson_dict[message.chat.id]['lesson_password'] != '':
+                change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+                change_link_keyboard.add('Изменить пароль')
+                change_link_keyboard.add(cancel_button, ready_button)
+                bot.send_message(message.chat.id,
+                                 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}\nПароль: {}'.format(
+                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                                 reply_markup=change_link_keyboard)
+                bot.register_next_step_handler(message, input_link)
+            elif lesson_dict[message.chat.id]['lesson_password'] == '':
+                change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
+                change_link_keyboard.add('Изменить пароль')
+                change_link_keyboard.add(cancel_button, ready_button)
+                bot.send_message(message.chat.id,
+                                 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
+                                 reply_markup=change_link_keyboard)
+                bot.register_next_step_handler(message, input_link)
 
-    elif message.text == 'Изменить ссылку':
-        if subject_password_var is not None:
-            change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-            change_link_keyboard.add('Изменить пароль')
-            change_link_keyboard.add(cancel_button, ready_button)
-            bot.send_message(message.chat.id, 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), reply_markup=change_link_keyboard)
-            bot.register_next_step_handler(message, input_link)
-        elif subject_password_var is None:
-            change_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
-            change_link_keyboard.add('Изменить пароль')
-            change_link_keyboard.add(cancel_button, ready_button)
-            bot.send_message(message.chat.id, 'якижи я заибавси памагити... \nПредмет: {} - {}\nСсылка: {}'.format(subject_var, subject_type_var, subject_link_var),reply_markup=change_link_keyboard)
-            bot.register_next_step_handler(message, input_link)
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
-    else:
-        subject_password_var = message.text
-        bot.send_message(message.chat.id,
-                         'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(subject_var, subject_type_var, subject_link_var, subject_password_var), disable_web_page_preview=True)
-        bot.register_next_step_handler(message, input_link_pass)
+        else:
+            lesson_dict[message.chat.id]['lesson_password'] = message.text
+            bot.send_message(message.chat.id,
+                             'Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                             disable_web_page_preview=True)
+            bot.register_next_step_handler(message, input_link_pass)
+
+
+    except AttributeError:
+        bot.send_message(message.chat.id, 'i dont understand, sorry bro')
+        bot.register_next_step_handler(message, callback=input_link_pass)
 
 
 '''                        
@@ -396,9 +444,11 @@ SCHEDULE MENU
 ########################################################################################################################                                                  
 '''
 
+
 @bot.message_handler(content_types=['text'])
 def schedule_menu(message):
     try:
+
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся...', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, callback=main_menu)
@@ -421,6 +471,10 @@ def schedule_menu(message):
         elif message.text == week2_button:
             bot.send_message(message.chat.id, 'А теперь день', reply_markup=week2_day_choose_keyboard)
             bot.register_next_step_handler(message, callback=week_2)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
 
     except AttributeError:
@@ -464,6 +518,10 @@ def week_1(message):
         elif message.text == back_button:
             bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=schedule_menu_keyboard)
             bot.register_next_step_handler(message, callback=schedule_menu)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=week1_day_choose_keyboard)
@@ -511,6 +569,10 @@ def week_2(message):
         elif message.text == back_button:
             bot.send_message(message.chat.id, text='Возвращаемся назад...', reply_markup=schedule_menu_keyboard)
             bot.register_next_step_handler(message, callback=schedule_menu)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=week2_day_choose_keyboard)
@@ -569,6 +631,10 @@ def settings_menu(message):
                              reply_markup=back_button_keyboard)
             bot.register_next_step_handler(message, callback=change_group_name)
 
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
+
         else:
             bot.send_message(message.chat.id, 'i dont understand, sorry bro', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
@@ -597,6 +663,10 @@ def add_link(message):
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             links = message.text.split('|')
@@ -635,6 +705,10 @@ def add_hotline(message):
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             hotlines = message.text.split(', ')
@@ -686,6 +760,10 @@ def add_mail(message):
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
 
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
+
         else:
             mails = message.text.split('|')
 
@@ -725,6 +803,10 @@ def set_notification(message):
         if message.text == back_button:
             bot.send_message(message.chat.id, 'Возвращаемся назад...', reply_markup=settings_menu_keyboard)
             bot.register_next_step_handler(message, callback=settings_menu)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         # elif re.match("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", message.text):
         #     cron_date = '{0} {1} * * *'.format(int(message.text[3::]), int(message.text[:2]))  # 12:23
@@ -805,6 +887,10 @@ def change_group_name(message):
             links_inline_subjects_keyboard.add(
                 telebot.types.InlineKeyboardButton(text='Назад', callback_data='first_back_button'),
                 in_main_menu_inline_button)
+
+        elif message.text == '/start':
+            bot.send_message(message.chat.id, rereg_reply, reply_markup=None, parse_mode='HTML')
+            bot.register_next_step_handler(message, registration)
 
         else:
             bot.send_message(message.chat.id, '<b>{}</b>? Я о такой группе пока-что не слышал. Попробуй ещё раз.'
