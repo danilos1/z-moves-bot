@@ -174,7 +174,7 @@ def main_menu(message):
             link_inline_keyboard = telebot.types.InlineKeyboardMarkup()
             link_inline_keyboard.add(links_inline_add_button)
             link_inline_keyboard.add(in_main_menu_inline_button)
-            lesson_dict = {message.chat.id: {'lesson_name': '', 'lesson_type': '', 'lesson_link': '', 'lesson_password': ''}}
+            lesson_dict.update({message.chat.id: {'lesson_name': '', 'lesson_type': '', 'lesson_link': '', 'lesson_password': ''}})
             db.users_update_last_activity(message.from_user.username, time.strftime('%d/%m/%y, %X'), message.chat.id)
             bot.send_message(message.chat.id,
                              links.get_links(message.chat.id),
@@ -256,7 +256,7 @@ def test_inline_reply(call):
                               message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard,
                               parse_mode='HTML')
         lesson_dict[call.message.chat.id]['lesson_name'] = call.data
-        print(lesson_dict)
+
 
     elif call.data == 'first_back_button':
         bot.edit_message_text(text='Выбери предмет', chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -269,7 +269,7 @@ def test_inline_reply(call):
     elif call.data == 'Лаб' or call.data == 'Лек' or call.data == 'Прак':
 
         lesson_dict[call.message.chat.id]['lesson_type'] = call.data
-        print(lesson_dict)
+
 
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(call.message.chat.id,
@@ -315,33 +315,32 @@ def input_link(message):
             bot.send_message(message.chat.id, 'Главное меню', reply_markup=main_menu_keyboard)
             bot.register_next_step_handler(message, main_menu)
 
-        elif message.text == 'Готово':
-            if lesson_dict[message.chat.id, lesson_dict[message.chat.id]['lesson_password']] == '':
-                bot.send_message(message.chat.id,
-                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
-                                 reply_markup=main_menu_keyboard)
-                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'])
-
-                bot.register_next_step_handler(message, main_menu)
-            elif lesson_dict[message.chat.id, lesson_dict[message.chat.id]['lesson_password']] != '':
-                bot.send_message(message.chat.id,
-                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}\nПароль: {}'.format(
-                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
-                                 reply_markup=main_menu_keyboard)
-                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password'])
-                lesson_dict[message.chat.id].pop()
-                bot.register_next_step_handler(message, main_menu)
-
         elif message.text == 'Добавить пароль' or message.text == 'Изменить пароль':
             inserted_link_keyboard_to_password = telebot.types.ReplyKeyboardMarkup(True, True)
             inserted_link_keyboard_to_password.add('Изменить ссылку')
             inserted_link_keyboard_to_password.add(cancel_button, ready_button)
             bot.send_message(message.chat.id, 'Отправляй пароль гнида', reply_markup=inserted_link_keyboard_to_password)
             bot.register_next_step_handler(message, input_link_pass)
+
+        elif message.text == 'Готово':
             print(lesson_dict)
+            if lesson_dict[message.chat.id]['lesson_password'] == '':
+                bot.send_message(message.chat.id,
+                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
+                                 reply_markup=main_menu_keyboard)
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'])
+
+                bot.register_next_step_handler(message, main_menu)
+            elif lesson_dict[message.chat.id]['lesson_password'] != '':
+                bot.send_message(message.chat.id,
+                                 'Вы успешно добавили ссылку.\nПредмет: {}-{}\nСсылка: {}\nПароль: {}'.format(
+                                     lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
+                                 reply_markup=main_menu_keyboard)
+                db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password'])
+                bot.register_next_step_handler(message, main_menu)
 
         elif message.text == message.text:
-            if lesson_dict[message.chat.id]['lesson_link'] == '':
+            if lesson_dict[message.chat.id]['lesson_password'] == '':
                 lesson_dict[message.chat.id]['lesson_link'] = message.text
                 inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
                 inserted_link_keyboard.add('Добавить пароль')
@@ -351,7 +350,7 @@ def input_link(message):
                                      lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
                                  reply_markup=inserted_link_keyboard, disable_web_page_preview=True)
                 bot.register_next_step_handler(message, input_link)
-            elif lesson_dict[message.chat.id]['lesson_link'] != '':
+            elif lesson_dict[message.chat.id]['lesson_password'] != '':
                 lesson_dict[message.chat.id]['lesson_link'] = message.text
                 inserted_link_keyboard = telebot.types.ReplyKeyboardMarkup(True, True)
                 inserted_link_keyboard.add('Изменить пароль')
@@ -375,7 +374,8 @@ def input_link(message):
 
 @bot.message_handler(content_types=['text'])
 def input_link_pass(message):
-    global  link_redact_keyboard, lesson_dict
+    global link_redact_keyboard, lesson_dict
+
     try:
         if message.text == 'Готово':
             if lesson_dict[message.chat.id]['lesson_password'] == '':
@@ -383,8 +383,7 @@ def input_link_pass(message):
                                  'Вы успешно Предмет: {} - {}\nСсылка: {}\n'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link']),
                                  reply_markup=main_menu_keyboard, disable_web_page_preview=True)
                 db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'])
-                subject_link_var = None
-                subject_password_var = None
+
                 bot.register_next_step_handler(message, main_menu)
 
             elif lesson_dict[message.chat.id]['lesson_password'] != '':
@@ -392,8 +391,6 @@ def input_link_pass(message):
                                  'Заебись нахуй. Предмет: {} - {}\nСсылка: {}\nПароль: {}'.format(lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password']),
                                  reply_markup=main_menu_keyboard, disable_web_page_preview=True)
                 db.add_links(message.chat.id, lesson_dict[message.chat.id]['lesson_name'], lesson_dict[message.chat.id]['lesson_type'], lesson_dict[message.chat.id]['lesson_link'], lesson_dict[message.chat.id]['lesson_password'])
-                subject_link_var = None
-                subject_password_var = None
                 bot.register_next_step_handler(message, main_menu)
 
         elif message.text == 'Изменить ссылку':
