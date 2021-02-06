@@ -255,7 +255,7 @@ def test_inline_reply(call):
         bot.edit_message_text(text='Выбери тип занятия', chat_id=call.message.chat.id,
                               message_id=call.message.message_id, reply_markup=links_subject_type_inline_keyboard,
                               parse_mode='HTML')
-        lesson_dict[call.message.chat.id]['lesson_name'] = call.data
+        lesson_dict[call.message.chat.id]['lesson_name'] = w_dict[call.data]
 
 
     elif call.data == 'first_back_button':
